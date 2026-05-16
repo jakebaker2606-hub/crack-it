@@ -49,12 +49,15 @@ goOnline(db);
 
       teamA: 0,
       teamB: 0,
+      teamC: 0,
 
       teamAName: "Team A",
       teamBName: "Team B",
+      teamCName: "Team C",
 
       teamAAvatar: "🦊",
       teamBAvatar: "🐼",
+      teamCAvatar: "🐸",
 
       round: 1,
 
@@ -132,6 +135,46 @@ await set(gameRef, {
     });
   };
 
+  const addTeamC = async () => {
+
+  playSound("correct.mp3");
+
+  await updateGame({
+    teamC: (gameState.teamC || 0) + 500,
+  });
+
+};
+
+const minusTeamA = async () => {
+
+  playSound("wrong.mp3");
+
+  await updateGame({
+    teamA: Math.max(0, (gameState.teamA || 0) - 500),
+  });
+
+};
+
+const minusTeamB = async () => {
+
+  playSound("wrong.mp3");
+
+  await updateGame({
+    teamB: Math.max(0, (gameState.teamB || 0) - 500),
+  });
+
+};
+
+const minusTeamC = async () => {
+
+  playSound("wrong.mp3");
+
+  await updateGame({
+    teamC: Math.max(0, (gameState.teamC || 0) - 500),
+  });
+
+};
+
   const randomQuestion = async () => {
 
     const random =
@@ -175,12 +218,15 @@ await set(gameRef, {
 
       teamA: 0,
       teamB: 0,
+      teamC: 0,
 
       teamAName: "Team A",
       teamBName: "Team B",
+      teamCName: "Team C",
 
       teamAAvatar: "🦊",
       teamBAvatar: "🐼",
+      teamCAvatar: "🐸",
 
       round: 1,
 
@@ -259,6 +305,33 @@ await set(gameRef, {
         >
           TEAM B +500
         </button>
+        <button
+  onClick={addTeamC}
+  className="bg-green-600 p-10 rounded-3xl text-3xl font-black"
+>
+  TEAM C +500
+</button>
+
+<button
+  onClick={minusTeamA}
+  className="bg-red-700 p-10 rounded-3xl text-3xl font-black"
+>
+  TEAM A -500
+</button>
+
+<button
+  onClick={minusTeamB}
+  className="bg-red-700 p-10 rounded-3xl text-3xl font-black"
+>
+  TEAM B -500
+</button>
+
+<button
+  onClick={minusTeamC}
+  className="bg-red-700 p-10 rounded-3xl text-3xl font-black"
+>
+  TEAM C -500
+</button>
 
         <button
           onClick={() =>

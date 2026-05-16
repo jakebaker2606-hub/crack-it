@@ -13,12 +13,15 @@ export default function AudiencePage() {
   const [gameState, setGameState] = useState<any>({
     teamA: 0,
     teamB: 0,
+    teamC: 0,
 
     teamAName: "Team A",
     teamBName: "Team B",
+    teamCName: "Team C",
 
     teamAAvatar: "🦊",
     teamBAvatar: "🐼",
+    teamCAvatar: "🐸",
 
     round: 1,
 
@@ -204,11 +207,27 @@ export default function AudiencePage() {
 
           <motion.div
             initial={{ rotate: 0 }}
-            animate={{ rotate: 1440 }}
-            transition={{ duration: 4 }}
+            animate={{
+  rotate: 3600
+}}
+            transition={{
+  duration: 5,
+  ease: "easeOut"
+}}
             className="bg-purple-600 p-16 rounded-full w-[450px] h-[450px] mx-auto flex items-center justify-center text-5xl font-black mb-10 border-8 border-yellow-400"
           >
-            {gameState.wheelResult}
+            <motion.div
+  key={gameState.wheelResult}
+  initial={{ scale: 0.5 }}
+  animate={{ scale: 1.2 }}
+  transition={{
+    repeat: Infinity,
+    repeatType: "reverse",
+    duration: 0.2
+  }}
+>
+  {gameState.wheelResult}
+</motion.div>
           </motion.div>
 
         )}
@@ -281,7 +300,31 @@ export default function AudiencePage() {
                 {gameState.teamB}
               </motion.div>
             </div>
+<motion.div
+  animate={{ scale: [1, 1.05, 1] }}
+  transition={{ repeat: Infinity, duration: 2 }}
+  className="bg-green-600 p-10 rounded-3xl min-w-[300px] shadow-2xl"
+>
 
+  <div className="text-7xl mb-4">
+    {gameState.teamCAvatar}
+  </div>
+
+  <div className="text-4xl font-black">
+    {gameState.teamCName}
+  </div>
+
+  <div className="text-7xl font-black mt-4">
+    <motion.div
+      key={gameState.teamC}
+      initial={{ scale: 1.8 }}
+      animate={{ scale: 1 }}
+    >
+      {gameState.teamC}
+    </motion.div>
+  </div>
+
+</motion.div>
           </motion.div>
 
         </div>
