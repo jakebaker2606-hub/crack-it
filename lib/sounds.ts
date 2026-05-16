@@ -1,9 +1,25 @@
+let currentAudio: HTMLAudioElement | null = null;
+
 export const playSound = (sound: string) => {
 
-  const audio = new Audio(`/sounds/${sound}`);
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+  }
 
-  audio.volume = 0.7;
+  currentAudio = new Audio(`/sounds/${sound}`);
 
-  audio.play();
+  currentAudio.volume = 0.7;
+
+  currentAudio.play();
+
+};
+
+export const stopSound = () => {
+
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+  }
 
 };

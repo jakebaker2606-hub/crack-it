@@ -13,7 +13,7 @@ import {
 import { db } from "../../lib/firebase";
 import { questions } from "../../lib/questions";
 import { wheelOptions } from "../../lib/wheel";
-import { playSound } from "../../lib/sounds";
+import { playSound, stopSound } from "../../lib/sounds";
 
 import { motion } from "framer-motion";
 
@@ -286,11 +286,19 @@ const minusTeamC = async () => {
         </button>
 
         <button
-          onClick={() => updateGame({ timer: 0 })}
-          className="bg-gray-600 p-10 rounded-3xl text-3xl font-black"
-        >
-          STOP TIMER
-        </button>
+  onClick={() => {
+
+    stopSound();
+
+    updateGame({
+      timer: 0,
+    });
+
+  }}
+  className="bg-gray-600 p-10 rounded-3xl text-3xl font-black"
+>
+  STOP TIMER
+</button>
 
         <button
           onClick={addTeamA}
@@ -387,7 +395,16 @@ const minusTeamC = async () => {
         >
           TEAM B WINS
         </button>
-
+<button
+  onClick={() =>
+    updateGame({
+      winner: "TEAM C",
+    })
+  }
+  className="bg-green-700 p-10 rounded-3xl text-3xl font-black"
+>
+  TEAM C WINS
+</button>
         <button
           onClick={() => {
 

@@ -249,7 +249,7 @@ export default function AudiencePage() {
 
         )}
 
-        <div className="flex gap-10 justify-center">
+        <div className="grid grid-cols-3 gap-10 justify-center">
 
           <motion.div
             animate={{ scale: [1, 1.05, 1] }}
