@@ -66,23 +66,30 @@ export default function AudiencePage() {
 
       <div className="min-h-screen bg-black flex items-center justify-center overflow-hidden relative">
 
+        {/* VIDEO */}
+
         <video
           autoPlay
           muted
           loop
           playsInline
-          className="absolute inset-0 w-full h-full object-cover opacity-40"
+          preload="auto"
+          className="absolute inset-0 w-full h-full object-cover opacity-30"
         >
           <source src="/videos/background.mp4" type="video/mp4" />
         </video>
 
-        <div className="absolute inset-0 bg-black/50" />
+        {/* DARK OVERLAY */}
+
+        <div className="absolute inset-0 bg-black/60" />
+
+        {/* INTRO TITLE */}
 
         <motion.h1
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ duration: 1 }}
-          className="text-yellow-400 text-9xl font-black z-10"
+          className="text-yellow-400 text-9xl font-black z-10 drop-shadow-[0_0_30px_gold]"
         >
           CRACK IT!
         </motion.h1>
@@ -97,21 +104,24 @@ export default function AudiencePage() {
 
     <div className="min-h-screen bg-black text-white overflow-hidden relative">
 
-      {/* BACKGROUND VIDEO */}
+      {/* VIDEO BACKGROUND */}
 
       <video
         autoPlay
         muted
         loop
         playsInline
-        className="fixed inset-0 w-full h-full object-cover opacity-30 z-0"
+        preload="auto"
+        className="fixed inset-0 w-full h-full object-cover z-0 opacity-30"
       >
         <source src="/videos/background.mp4" type="video/mp4" />
       </video>
 
-      <div className="fixed inset-0 bg-black/40 z-0" />
+      {/* OVERLAY */}
 
-      {/* MAIN CONTENT */}
+      <div className="fixed inset-0 bg-black/50 z-0" />
+
+      {/* CONTENT */}
 
       <div className="relative z-10 p-10">
 
@@ -144,7 +154,7 @@ export default function AudiencePage() {
             repeat: Infinity,
             duration: 2,
           }}
-          className="text-center text-yellow-400 text-9xl font-black mt-10 drop-shadow-[0_0_25px_gold]"
+          className="text-center text-yellow-400 text-9xl font-black mt-10 drop-shadow-[0_0_30px_gold]"
         >
           CRACK IT!
         </motion.h1>
@@ -166,7 +176,7 @@ export default function AudiencePage() {
           {gameState.question}
         </motion.div>
 
-        {/* TEAM PANELS */}
+        {/* TEAMS */}
 
         <div className="flex justify-center gap-10 flex-wrap mt-14">
 
@@ -195,7 +205,7 @@ export default function AudiencePage() {
               key={gameState.teamA}
               initial={{ scale: 1.5 }}
               animate={{ scale: 1 }}
-              className="text-center text-9xl font-black mt-10"
+              className="text-center text-[120px] leading-none font-black mt-6"
             >
               {gameState.teamA}
             </motion.div>
@@ -228,7 +238,7 @@ export default function AudiencePage() {
               key={gameState.teamB}
               initial={{ scale: 1.5 }}
               animate={{ scale: 1 }}
-              className="text-center text-9xl font-black mt-10"
+              className="text-center text-[120px] leading-none font-black mt-6"
             >
               {gameState.teamB}
             </motion.div>
@@ -261,7 +271,7 @@ export default function AudiencePage() {
               key={gameState.teamC}
               initial={{ scale: 1.5 }}
               animate={{ scale: 1 }}
-              className="text-center text-9xl font-black mt-10"
+              className="text-center text-[120px] leading-none font-black mt-6"
             >
               {gameState.teamC}
             </motion.div>
@@ -270,20 +280,20 @@ export default function AudiencePage() {
 
         </div>
 
-        {/* WINNER */}
+        {/* WINNER SCREEN */}
 
         {gameState.winner && (
 
           <motion.div
             initial={{
               scale: 0,
-              rotate: -10,
+              opacity: 0,
             }}
             animate={{
               scale: 1,
-              rotate: 0,
+              opacity: 1,
             }}
-            className="fixed inset-0 flex items-center justify-center bg-black/80 z-50"
+            className="fixed inset-0 bg-black/90 flex items-center justify-center z-50"
           >
 
             <motion.div
@@ -297,7 +307,7 @@ export default function AudiencePage() {
               className="text-center"
             >
 
-              <div className="text-yellow-400 text-[140px] font-black">
+              <div className="text-yellow-400 text-[140px] font-black drop-shadow-[0_0_40px_gold]">
                 {gameState.winner}
               </div>
 
