@@ -17,11 +17,15 @@ export const questions = [
     question: "What is the capital of France?",
     answer: "Paris",
   },
-
+{
+    category: "Geography",
+    question: "What is the name of the tallest mountain?",
+    answer: "Mount Everest",
+  },
   {
     category: "Animals",
     question: "Which animal is known as the King of the Jungle?",
     answer: "Lion",
   },
 
-];
+]; 
