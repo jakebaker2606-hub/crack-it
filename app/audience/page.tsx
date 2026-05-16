@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-import { ref, onValue } from "firebase/database";
+import { motion } from "framer-motion";
 
 import { db } from "../../lib/firebase";
 
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  ref,
+  onValue,
+} from "firebase/database";
 
 export default function AudiencePage() {
 
@@ -23,37 +25,30 @@ export default function AudiencePage() {
     teamBAvatar: "🐼",
     teamCAvatar: "🐸",
 
+    question: "Waiting for next question...",
+
     round: 1,
 
-    question: "Waiting for next question...",
-    answer: "",
-
-    revealAnswer: false,
-
-    category: "",
-
-    chaos: "",
-
-    timer: 0,
-
-    wheelResult: "",
-    showWheel: false,
-
     winner: "",
-
-    showIntro: false,
-    showGameOver: false,
-
-    hypeMessage: "",
-
-    suddenDeath: false,
   });
+
+  const [showIntro, setShowIntro] = useState(true);
+
+  useEffect(() => {
+
+    const timer = setTimeout(() => {
+      setShowIntro(false);
+    }, 10000);
+
+    return () => clearTimeout(timer);
+
+  }, []);
 
   useEffect(() => {
 
     const gameRef = ref(db, "game");
 
-    const unsubscribe = onValue(gameRef, (snapshot) => {
+    onValue(gameRef, (snapshot) => {
 
       const data = snapshot.val();
 
@@ -63,274 +58,263 @@ export default function AudiencePage() {
 
     });
 
-    return () => unsubscribe();
-
   }, []);
 
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-black to-gray-900 text-white p-10 overflow-hidden">
+  if (showIntro) {
 
-      {gameState.showIntro && (
+    return (
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="fixed inset-0 bg-black flex items-center justify-center z-50"
+      <div className="min-h-screen bg-black flex items-center justify-center overflow-hidden relative">
+
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover opacity-40"
         >
+          <source src="/videos/background.mp4" type="video/mp4" />
+        </video>
 
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1.2 }}
-            transition={{
-              repeat: Infinity,
-              repeatType: "reverse",
-              duration: 1
-            }}
-            className="text-yellow-400 text-9xl font-black"
-          >
-            CRACK IT!
-          </motion.div>
-
-        </motion.div>
-
-      )}
-
-      {gameState.showGameOver && (
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50"
-        >
-
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1.2 }}
-            transition={{
-              repeat: Infinity,
-              repeatType: "reverse",
-              duration: 0.6
-            }}
-            className="text-red-500 text-9xl font-black"
-          >
-            GAME OVER
-          </motion.div>
-
-        </motion.div>
-
-      )}
-
-      <div className="text-center max-w-6xl w-full">
-
-        {gameState.suddenDeath && (
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{
-              repeat: Infinity,
-              repeatType: "reverse",
-              duration: 0.3
-            }}
-            className="bg-red-700 text-white p-8 rounded-3xl text-7xl font-black mb-8"
-          >
-            SUDDEN DEATH
-          </motion.div>
-
-        )}
-
-        <motion.div
-          initial={{ y: -100 }}
-          animate={{ y: 0 }}
-          className="bg-purple-600 p-4 rounded-3xl text-4xl font-black mb-6 inline-block"
-        >
-          ROUND {gameState.round}
-        </motion.div>
+        <div className="absolute inset-0 bg-black/50" />
 
         <motion.h1
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          className="text-8xl font-black text-yellow-400 mb-10"
+          transition={{ duration: 1 }}
+          className="text-yellow-400 text-9xl font-black z-10"
         >
           CRACK IT!
         </motion.h1>
 
-        <div className="text-3xl font-black text-purple-400 mb-4">
-          {gameState.category}
-        </div>
+      </div>
 
-        <AnimatePresence mode="wait">
+    );
+
+  }
+
+  return (
+
+    <div className="min-h-screen bg-black text-white overflow-hidden relative">
+
+      {/* BACKGROUND VIDEO */}
+
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        className="fixed inset-0 w-full h-full object-cover opacity-30 z-0"
+      >
+        <source src="/videos/background.mp4" type="video/mp4" />
+      </video>
+
+      <div className="fixed inset-0 bg-black/40 z-0" />
+
+      {/* MAIN CONTENT */}
+
+      <div className="relative z-10 p-10">
+
+        {/* ROUND */}
+
+        <div className="flex justify-center">
 
           <motion.div
-            key={gameState.question}
-            initial={{ opacity: 0, y: 80 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="bg-yellow-400 text-black p-10 rounded-3xl text-5xl font-black mb-10 shadow-2xl"
-          >
-            {gameState.question}
-          </motion.div>
-
-        </AnimatePresence>
-
-        {gameState.revealAnswer && (
-
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="bg-green-500 text-black p-8 rounded-3xl text-5xl font-black mb-10"
-          >
-            ANSWER: {gameState.answer}
-          </motion.div>
-
-        )}
-
-        {gameState.timer > 0 && (
-
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1.1 }}
+            animate={{
+              scale: [1, 1.08, 1],
+            }}
             transition={{
               repeat: Infinity,
-              repeatType: "reverse",
-              duration: 0.5
+              duration: 2,
             }}
-            className="bg-green-500 text-black p-8 rounded-full text-7xl font-black mb-10 w-48 h-48 flex items-center justify-center mx-auto"
+            className="bg-purple-600 px-10 py-4 rounded-3xl text-5xl font-black"
           >
-            {gameState.timer}
+            ROUND {gameState.round}
           </motion.div>
 
-        )}
+        </div>
 
-        {gameState.showWheel && (
+        {/* TITLE */}
+
+        <motion.h1
+          animate={{
+            scale: [1, 1.03, 1],
+          }}
+          transition={{
+            repeat: Infinity,
+            duration: 2,
+          }}
+          className="text-center text-yellow-400 text-9xl font-black mt-10 drop-shadow-[0_0_25px_gold]"
+        >
+          CRACK IT!
+        </motion.h1>
+
+        {/* QUESTION */}
+
+        <motion.div
+          key={gameState.question}
+          initial={{
+            opacity: 0,
+            scale: 0.8,
+          }}
+          animate={{
+            opacity: 1,
+            scale: 1,
+          }}
+          className="bg-yellow-400 text-black text-center text-5xl font-black p-10 rounded-3xl mt-10 shadow-2xl"
+        >
+          {gameState.question}
+        </motion.div>
+
+        {/* TEAM PANELS */}
+
+        <div className="flex justify-center gap-10 flex-wrap mt-14">
+
+          {/* TEAM A */}
 
           <motion.div
-            initial={{ rotate: 0 }}
             animate={{
-  rotate: 3600
-}}
+              y: [0, -10, 0],
+            }}
             transition={{
-  duration: 5,
-  ease: "easeOut"
-}}
-            className="bg-purple-600 p-16 rounded-full w-[450px] h-[450px] mx-auto flex items-center justify-center text-5xl font-black mb-10 border-8 border-yellow-400"
+              repeat: Infinity,
+              duration: 3,
+            }}
+            className="w-[300px] h-[420px] bg-blue-600 rounded-3xl p-10 shadow-[0_0_40px_#3b82f6]"
           >
+
+            <div className="text-8xl text-center">
+              {gameState.teamAAvatar}
+            </div>
+
+            <div className="text-5xl font-black text-center mt-6">
+              {gameState.teamAName}
+            </div>
+
             <motion.div
-  key={gameState.wheelResult}
-  initial={{ scale: 0.5 }}
-  animate={{ scale: 1.2 }}
-  transition={{
-    repeat: Infinity,
-    repeatType: "reverse",
-    duration: 0.2
-  }}
->
-  {gameState.wheelResult}
-</motion.div>
+              key={gameState.teamA}
+              initial={{ scale: 1.5 }}
+              animate={{ scale: 1 }}
+              className="text-center text-9xl font-black mt-10"
+            >
+              {gameState.teamA}
+            </motion.div>
+
           </motion.div>
 
-        )}
+          {/* TEAM B */}
+
+          <motion.div
+            animate={{
+              y: [0, -10, 0],
+            }}
+            transition={{
+              repeat: Infinity,
+              duration: 3,
+              delay: 0.3,
+            }}
+            className="w-[300px] h-[420px] bg-pink-600 rounded-3xl p-10 shadow-[0_0_40px_#ec4899]"
+          >
+
+            <div className="text-8xl text-center">
+              {gameState.teamBAvatar}
+            </div>
+
+            <div className="text-5xl font-black text-center mt-6">
+              {gameState.teamBName}
+            </div>
+
+            <motion.div
+              key={gameState.teamB}
+              initial={{ scale: 1.5 }}
+              animate={{ scale: 1 }}
+              className="text-center text-9xl font-black mt-10"
+            >
+              {gameState.teamB}
+            </motion.div>
+
+          </motion.div>
+
+          {/* TEAM C */}
+
+          <motion.div
+            animate={{
+              y: [0, -10, 0],
+            }}
+            transition={{
+              repeat: Infinity,
+              duration: 3,
+              delay: 0.6,
+            }}
+            className="w-[300px] h-[420px] bg-green-600 rounded-3xl p-10 shadow-[0_0_40px_#22c55e]"
+          >
+
+            <div className="text-8xl text-center">
+              {gameState.teamCAvatar}
+            </div>
+
+            <div className="text-5xl font-black text-center mt-6">
+              {gameState.teamCName}
+            </div>
+
+            <motion.div
+              key={gameState.teamC}
+              initial={{ scale: 1.5 }}
+              animate={{ scale: 1 }}
+              className="text-center text-9xl font-black mt-10"
+            >
+              {gameState.teamC}
+            </motion.div>
+
+          </motion.div>
+
+        </div>
+
+        {/* WINNER */}
 
         {gameState.winner && (
 
           <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1.2 }}
-            transition={{
-              repeat: Infinity,
-              repeatType: "reverse",
-              duration: 0.4
+            initial={{
+              scale: 0,
+              rotate: -10,
             }}
-            className="fixed inset-0 bg-yellow-400 flex items-center justify-center text-black text-8xl font-black z-50"
+            animate={{
+              scale: 1,
+              rotate: 0,
+            }}
+            className="fixed inset-0 flex items-center justify-center bg-black/80 z-50"
           >
-            🎉 {gameState.winner} WINS 🎉
+
+            <motion.div
+              animate={{
+                scale: [1, 1.08, 1],
+              }}
+              transition={{
+                repeat: Infinity,
+                duration: 1,
+              }}
+              className="text-center"
+            >
+
+              <div className="text-yellow-400 text-[140px] font-black">
+                {gameState.winner}
+              </div>
+
+              <div className="text-white text-7xl font-black mt-4">
+                WINS!
+              </div>
+
+            </motion.div>
+
           </motion.div>
 
         )}
 
-        <div className="grid grid-cols-3 gap-10 justify-center">
-
-          <motion.div
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ repeat: Infinity, duration: 2 }}
-            className="bg-blue-600 p-10 rounded-3xl min-w-[300px] shadow-2xl"
-          >
-
-            <div className="text-7xl mb-4">
-              {gameState.teamAAvatar}
-            </div>
-
-            <div className="text-4xl font-black">
-              {gameState.teamAName}
-            </div>
-
-            <div className="text-7xl font-black mt-4">
-              <motion.div
-                key={gameState.teamA}
-                initial={{ scale: 1.8 }}
-                animate={{ scale: 1 }}
-              >
-                {gameState.teamA}
-              </motion.div>
-            </div>
-
-          </motion.div>
-
-          <motion.div
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ repeat: Infinity, duration: 2 }}
-            className="bg-pink-600 p-10 rounded-3xl min-w-[300px] shadow-2xl"
-          >
-
-            <div className="text-7xl mb-4">
-              {gameState.teamBAvatar}
-            </div>
-
-            <div className="text-4xl font-black">
-              {gameState.teamBName}
-            </div>
-
-            <div className="text-7xl font-black mt-4">
-              <motion.div
-                key={gameState.teamB}
-                initial={{ scale: 1.8 }}
-                animate={{ scale: 1 }}
-              >
-                {gameState.teamB}
-              </motion.div>
-            </div>
-<motion.div
-  animate={{ scale: [1, 1.05, 1] }}
-  transition={{ repeat: Infinity, duration: 2 }}
-  className="bg-green-600 p-10 rounded-3xl min-w-[300px] shadow-2xl"
->
-
-  <div className="text-7xl mb-4">
-    {gameState.teamCAvatar}
-  </div>
-
-  <div className="text-4xl font-black">
-    {gameState.teamCName}
-  </div>
-
-  <div className="text-7xl font-black mt-4">
-    <motion.div
-      key={gameState.teamC}
-      initial={{ scale: 1.8 }}
-      animate={{ scale: 1 }}
-    >
-      {gameState.teamC}
-    </motion.div>
-  </div>
-
-</motion.div>
-          </motion.div>
-
-        </div>
-
       </div>
 
-    </main>
+    </div>
+
   );
+
 }
