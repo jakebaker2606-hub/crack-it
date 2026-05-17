@@ -387,41 +387,95 @@ export default function AudiencePage() {
 
         <div className="fixed inset-0 z-[200] bg-black/90 flex flex-col items-center justify-center">
 
-          <div
-            style={{
-              transform: `rotate(${rotation}deg)`,
-              transition: "transform 5s ease-out",
-            }}
-            className="w-[500px] h-[500px] rounded-full border-[20px] border-white relative"
-          >
+          {/* TITLE */}
 
-            {wheelOptions.map((option, index) => {
+          <h1 className="text-yellow-400 text-8xl font-black mb-10 tracking-widest">
+            CHAOS ROUND
+          </h1>
 
-              const angle =
-                (360 / wheelOptions.length) * index;
+          {/* POINTER */}
 
-              return (
+          <div className="w-0 h-0 border-l-[35px] border-r-[35px] border-b-[70px] border-l-transparent border-r-transparent border-b-yellow-400 z-50 mb-[-20px]" />
 
-                <div
-                  key={option}
-                  style={{
-                    transform: `rotate(${angle}deg)`,
-                    transformOrigin: "bottom center",
-                  }}
-                  className="absolute w-1/2 h-1/2 left-1/2 top-1/2 bg-purple-600 border border-black flex items-center justify-center text-center text-xl font-black"
-                >
-                  {option}
+          {/* WHEEL */}
+
+          <div className="relative">
+
+            {/* OUTER GLOW */}
+
+            <div className="absolute inset-0 rounded-full blur-3xl bg-purple-500 opacity-40 scale-110" />
+
+            {/* MAIN WHEEL */}
+
+            <div
+              style={{
+                transform: `rotate(${rotation}deg)`,
+                transition: "transform 5s cubic-bezier(0.17, 0.67, 0.12, 0.99)",
+              }}
+              className="relative w-[650px] h-[650px] rounded-full border-[18px] border-blue-700 overflow-hidden shadow-[0_0_80px_rgba(168,85,247,0.9)]"
+            >
+
+              {wheelOptions.map((option, index) => {
+
+                const angle =
+                  (360 / wheelOptions.length) * index;
+
+                const colors = [
+                  "#ff0055",
+                  "#ff8800",
+                  "#ffd000",
+                  "#00d936",
+                  "#00b7ff",
+                  "#7a00ff",
+                  "#ff00d4",
+                  "#ff3b3b",
+                ];
+
+                return (
+
+                  <div
+                    key={option}
+                    style={{
+                      transform: `rotate(${angle}deg) skewY(-45deg)`,
+                      background: colors[index],
+                    }}
+                    className="absolute w-1/2 h-1/2 origin-bottom-right right-1/2 bottom-1/2 border border-black"
+                  >
+
+                    <div
+                      style={{
+                        transform: "skewY(45deg) rotate(22deg)",
+                      }}
+                      className="absolute left-[55px] top-[120px] text-white font-black text-2xl w-[180px] text-center drop-shadow-[0_0_10px_black]"
+                    >
+                      {option}
+                    </div>
+
+                  </div>
+
+                );
+
+              })}
+
+              {/* CENTER */}
+
+              <div className="absolute left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] w-[180px] h-[180px] rounded-full bg-blue-900 border-[8px] border-blue-500 flex items-center justify-center shadow-2xl">
+
+                <div className="text-white text-5xl font-black rotate-[-20deg]">
+                  SPIN
                 </div>
 
-              );
+              </div>
 
-            })}
+            </div>
 
           </div>
 
+          {/* RESULT */}
+
           {game.chaosResult && (
 
-            <div className="bg-yellow-400 text-black text-6xl font-black px-12 py-6 rounded-3xl mt-10">
+            <div className="mt-12 bg-yellow-400 text-black px-16 py-8 rounded-3xl text-6xl font-black shadow-[0_0_50px_rgba(255,208,0,0.8)] animate-bounce">
               {game.chaosResult}
             </div>
 
@@ -471,4 +525,4 @@ export default function AudiencePage() {
 
   );
 
-} 
+}
