@@ -13,7 +13,4 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-export const db = getDatabase(
-  app,
-  "https://crack-it-6ee12-default-rtdb.europe-west1.firebasedatabase.app"
-);
+export const db = getDatabase(app);
