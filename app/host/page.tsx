@@ -16,6 +16,8 @@ export default function HostPage() {
 
   const [answer, setAnswer] = useState("");
 
+  const [timerInput, setTimerInput] = useState(30);
+
   const [game, setGame] = useState<any>({
     teamA: 0,
     teamB: 0,
@@ -72,6 +74,25 @@ export default function HostPage() {
 
   };
 
+  const startTimer = async () => {
+
+    await update(ref(db, "game"), {
+      timer: timerInput,
+      timerRunning: true,
+      showTimer: true,
+    });
+
+  };
+
+  const stopTimer = async () => {
+
+    await update(ref(db, "game"), {
+      timerRunning: false,
+      showTimer: false,
+    });
+
+  };
+
   return (
 
     <div className="min-h-screen bg-black text-white p-10 flex flex-col gap-6">
@@ -112,11 +133,38 @@ export default function HostPage() {
         SHOW ANSWER
       </button>
 
+      {/* TIMER */}
+
+      <div className="grid grid-cols-3 gap-5">
+
+        <input
+          type="number"
+          value={timerInput}
+          onChange={(e) =>
+            setTimerInput(Number(e.target.value))
+          }
+          className="p-6 rounded-2xl text-black text-3xl"
+        />
+
+        <button
+          onClick={startTimer}
+          className="bg-red-500 p-6 rounded-2xl text-3xl font-black"
+        >
+          START TIMER
+        </button>
+
+        <button
+          onClick={stopTimer}
+          className="bg-red-900 p-6 rounded-2xl text-3xl font-black"
+        >
+          STOP TIMER
+        </button>
+
+      </div>
+
       {/* SCORES */}
 
       <div className="grid grid-cols-3 gap-5 mt-10">
-
-        {/* TEAM A */}
 
         <div className="bg-blue-600 p-6 rounded-3xl flex flex-col gap-4">
 
@@ -140,8 +188,6 @@ export default function HostPage() {
 
         </div>
 
-        {/* TEAM B */}
-
         <div className="bg-pink-600 p-6 rounded-3xl flex flex-col gap-4">
 
           <h2 className="text-4xl font-black text-center">
@@ -163,8 +209,6 @@ export default function HostPage() {
           </button>
 
         </div>
-
-        {/* TEAM C */}
 
         <div className="bg-green-600 p-6 rounded-3xl flex flex-col gap-4">
 

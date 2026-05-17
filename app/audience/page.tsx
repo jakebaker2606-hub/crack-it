@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { db } from "../../lib/firebase";
 
 import {
   ref,
   onValue,
+  update,
 } from "firebase/database";
 
 export default function AudiencePage() {
@@ -18,20 +19,47 @@ export default function AudiencePage() {
     question: "",
     answer: "",
     showAnswer: false,
+    timer: 30,
+    timerRunning: false,
+    showTimer: false,
   });
+
+  const timerAudio = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+
+    timerAudio.current = new Audio("/sounds/timer.mp3");
+
+    timerAudio.current.loop = true;
+
+  }, []);
 
   useEffect(() => {
 
     const gameRef = ref(db, "game");
 
-    const unsubscribe = onValue(gameRef, (snapshot) => {
+    const unsubscribe = onValue(gameRef, async (snapshot) => {
 
       const data = snapshot.val();
 
-      console.log(data);
+      if (!data) return;
 
-      if (data) {
-        setGame(data);
+      setGame(data);
+
+      if (data.timerRunning) {
+
+        try {
+          await timerAudio.current?.play();
+        } catch {}
+
+      } else {
+
+        timerAudio.current?.pause();
+
+        if (timerAudio.current) {
+          timerAudio.current.currentTime = 0;
+        }
+
       }
 
     });
@@ -39,6 +67,32 @@ export default function AudiencePage() {
     return () => unsubscribe();
 
   }, []);
+
+  useEffect(() => {
+
+    let interval: any;
+
+    if (
+      game.timerRunning &&
+      game.timer > 0
+    ) {
+
+      interval = setInterval(async () => {
+
+        await update(ref(db, "game"), {
+          timer: game.timer - 1,
+        });
+
+      }, 1000);
+
+    }
+
+    return () => clearInterval(interval);
+
+  }, [
+    game.timerRunning,
+    game.timer,
+  ]);
 
   const formatScore = (score: number) => {
 
@@ -61,6 +115,20 @@ export default function AudiencePage() {
       <h1 className="text-yellow-400 text-8xl font-black text-center">
         CRACK IT!
       </h1>
+
+      {/* TIMER */}
+
+      {game.showTimer && (
+
+        <div className="flex justify-center mt-8">
+
+          <div className="bg-red-600 text-white text-7xl font-black px-16 py-8 rounded-3xl">
+            {game.timer}
+          </div>
+
+        </div>
+
+      )}
 
       {/* QUESTION */}
 
