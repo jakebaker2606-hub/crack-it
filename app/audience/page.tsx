@@ -23,6 +23,8 @@ const wheelOptions = [
 
 export default function AudiencePage() {
 
+  const pageRef = useRef<HTMLDivElement | null>(null);
+
   const [game, setGame] = useState<any>({});
 
   const [rotation, setRotation] = useState(0);
@@ -48,6 +50,82 @@ export default function AudiencePage() {
     chaosAudio.current = new Audio("/sounds/chaos.mp3");
 
     timerAudio.current.loop = true;
+
+  }, []);
+    /* AUTO FULLSCREEN */
+
+  useEffect(() => {
+
+    const goFullscreen = async () => {
+
+      try {
+
+        if (
+          pageRef.current &&
+          !document.fullscreenElement
+        ) {
+
+          await pageRef.current.requestFullscreen();
+
+        }
+
+      } catch {}
+
+    };
+
+    const handleKey = async (
+      e: KeyboardEvent
+    ) => {
+
+      /* F KEY = FULLSCREEN */
+
+      if (e.key.toLowerCase() === "f") {
+
+        try {
+
+          if (!document.fullscreenElement) {
+
+            await pageRef.current?.requestFullscreen();
+
+          } else {
+
+            await document.exitFullscreen();
+
+          }
+
+        } catch {}
+
+      }
+
+      /* SPACE = HIDE QUESTION */
+
+      if (e.code === "Space") {
+
+        await update(ref(db, "game"), {
+          question: "",
+          answer: "",
+          showAnswer: false,
+        });
+
+      }
+
+    };
+
+    window.addEventListener(
+      "keydown",
+      handleKey
+    );
+
+    goFullscreen();
+
+    return () => {
+
+      window.removeEventListener(
+        "keydown",
+        handleKey
+      );
+
+    };
 
   }, []);
 
@@ -216,7 +294,10 @@ export default function AudiencePage() {
 
   return (
 
-    <div className="min-h-screen bg-black text-white relative overflow-hidden">
+    <div
+  ref={pageRef}
+  className="min-h-screen bg-black text-white relative overflow-hidden"
+>
 
       {/* VIDEO BACKGROUND */}
 
@@ -259,7 +340,7 @@ export default function AudiencePage() {
 
         {/* QUESTION */}
 
-        <div className="bg-yellow-400 text-black text-center text-5xl font-black p-10 rounded-3xl mt-10 shadow-2xl">
+        <div className="bg-yellow-400 text-black text-center text-5xl font-black p-10 rounded-3xl mt-10 shadow-2xl animate-pulse">
           {game.question || "Waiting for next question..."}
         </div>
 
@@ -267,7 +348,7 @@ export default function AudiencePage() {
 
         {game.showAnswer && (
 
-          <div className="bg-green-500 text-white text-center text-5xl font-black p-10 rounded-3xl mt-6 shadow-2xl">
+          <div className="bg-green-500 text-white text-center text-5xl font-black p-10 rounded-3xl mt-6 shadow-2xl animate-bounce">
             ANSWER: {game.answer}
           </div>
 
