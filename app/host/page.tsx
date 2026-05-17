@@ -28,7 +28,7 @@ export default function HostPage() {
 
     const gameRef = ref(db, "game");
 
-    onValue(gameRef, (snapshot) => {
+    const unsubscribe = onValue(gameRef, (snapshot) => {
 
       const data = snapshot.val();
 
@@ -38,13 +38,9 @@ export default function HostPage() {
 
     });
 
+    return () => unsubscribe();
+
   }, []);
-
-  const updateGame = async (updates: any) => {
-
-    await update(ref(db, "game"), updates);
-
-  };
 
   return (
 
@@ -54,7 +50,7 @@ export default function HostPage() {
         HOST CONTROL PANEL
       </h1>
 
-      {/* QUESTION */}
+      {/* QUESTIONS */}
 
       <div className="grid gap-5 mb-10">
 
@@ -66,27 +62,34 @@ export default function HostPage() {
         />
 
         <button
-          onClick={() =>
-            updateGame({
-              question,
+          onClick={async () => {
+
+            await update(ref(db, "game"), {
+              question: question,
+              answer: "",
               showAnswer: false,
-            })
-          }
+            });
+
+          }}
           className="bg-yellow-500 text-black p-6 rounded-2xl text-3xl font-black"
         >
           SHOW QUESTION
         </button>
 
         <button
-          onClick={() =>
-            updateGame({
+          onClick={async () => {
+
+            await update(ref(db, "game"), {
               question: "",
-            })
-          }
+            });
+
+          }}
           className="bg-yellow-800 p-6 rounded-2xl text-3xl font-black"
         >
           REMOVE QUESTION
         </button>
+
+        {/* ANSWERS */}
 
         <input
           value={answer}
@@ -96,24 +99,28 @@ export default function HostPage() {
         />
 
         <button
-          onClick={() =>
-            updateGame({
-              answer,
+          onClick={async () => {
+
+            await update(ref(db, "game"), {
+              answer: answer,
               showAnswer: true,
-            })
-          }
+            });
+
+          }}
           className="bg-green-600 p-6 rounded-2xl text-3xl font-black"
         >
           SHOW ANSWER
         </button>
 
         <button
-          onClick={() =>
-            updateGame({
+          onClick={async () => {
+
+            await update(ref(db, "game"), {
               answer: "",
               showAnswer: false,
-            })
-          }
+            });
+
+          }}
           className="bg-green-900 p-6 rounded-2xl text-3xl font-black"
         >
           REMOVE ANSWER
@@ -135,25 +142,29 @@ export default function HostPage() {
         />
 
         <button
-          onClick={() =>
-            updateGame({
+          onClick={async () => {
+
+            await update(ref(db, "game"), {
               timer: timerInput,
               timerRunning: true,
               showTimer: true,
-            })
-          }
+            });
+
+          }}
           className="bg-blue-600 p-6 rounded-2xl text-3xl font-black"
         >
           START TIMER
         </button>
 
         <button
-          onClick={() =>
-            updateGame({
+          onClick={async () => {
+
+            await update(ref(db, "game"), {
               timerRunning: false,
               showTimer: false,
-            })
-          }
+            });
+
+          }}
           className="bg-red-700 p-6 rounded-2xl text-3xl font-black"
         >
           STOP TIMER
@@ -161,15 +172,13 @@ export default function HostPage() {
 
       </div>
 
-      {/* TEAM CONTROLS */}
+      {/* TEAMS */}
 
       <div className="grid grid-cols-2 gap-5 mb-10">
 
-        {/* TEAM A */}
-
         <button
           onClick={() =>
-            updateGame({
+            update(ref(db, "game"), {
               teamA: gameState.teamA + 500,
             })
           }
@@ -180,7 +189,7 @@ export default function HostPage() {
 
         <button
           onClick={() =>
-            updateGame({
+            update(ref(db, "game"), {
               teamA: Math.max(0, gameState.teamA - 500),
             })
           }
@@ -189,11 +198,9 @@ export default function HostPage() {
           TEAM A -500
         </button>
 
-        {/* TEAM B */}
-
         <button
           onClick={() =>
-            updateGame({
+            update(ref(db, "game"), {
               teamB: gameState.teamB + 500,
             })
           }
@@ -204,7 +211,7 @@ export default function HostPage() {
 
         <button
           onClick={() =>
-            updateGame({
+            update(ref(db, "game"), {
               teamB: Math.max(0, gameState.teamB - 500),
             })
           }
@@ -213,11 +220,9 @@ export default function HostPage() {
           TEAM B -500
         </button>
 
-        {/* TEAM C */}
-
         <button
           onClick={() =>
-            updateGame({
+            update(ref(db, "game"), {
               teamC: gameState.teamC + 500,
             })
           }
@@ -228,199 +233,13 @@ export default function HostPage() {
 
         <button
           onClick={() =>
-            updateGame({
+            update(ref(db, "game"), {
               teamC: Math.max(0, gameState.teamC - 500),
             })
           }
           className="bg-green-900 p-8 rounded-3xl text-3xl font-black"
         >
           TEAM C -500
-        </button>
-
-      </div>
-
-      {/* GAME CONTROLS */}
-
-      <div className="grid grid-cols-2 gap-5">
-
-        {/* CHAOS ROUND */}
-
-        <button
-          onClick={() =>
-            updateGame({
-              showChaosWheel: true,
-              chaosResult: "",
-            })
-          }
-          className="bg-yellow-500 text-black p-8 rounded-3xl text-3xl font-black"
-        >
-          START CHAOS ROUND
-        </button>
-
-        <button
-          onClick={() =>
-            updateGame({
-              showChaosWheel: false,
-              chaosResult: "",
-            })
-          }
-          className="bg-yellow-800 p-8 rounded-3xl text-3xl font-black"
-        >
-          CLOSE CHAOS ROUND
-        </button>
-
-        {/* INTRO */}
-
-        <button
-          onClick={() =>
-            updateGame({
-              showIntro: true,
-            })
-          }
-          className="bg-purple-600 p-8 rounded-3xl text-3xl font-black"
-        >
-          START INTRO
-        </button>
-
-        <button
-          onClick={() =>
-            updateGame({
-              showIntro: false,
-            })
-          }
-          className="bg-purple-900 p-8 rounded-3xl text-3xl font-black"
-        >
-          STOP INTRO
-        </button>
-
-        {/* LEADERBOARD */}
-
-        <button
-          onClick={() =>
-            updateGame({
-              showLeaderboard: true,
-            })
-          }
-          className="bg-orange-500 p-8 rounded-3xl text-3xl font-black"
-        >
-          SHOW LEADERBOARD
-        </button>
-
-        <button
-          onClick={() =>
-            updateGame({
-              showLeaderboard: false,
-            })
-          }
-          className="bg-orange-900 p-8 rounded-3xl text-3xl font-black"
-        >
-          HIDE LEADERBOARD
-        </button>
-
-        {/* WINNER */}
-
-        <button
-          onClick={() => {
-
-            const scores = [
-              {
-                name: "TEAM A",
-                score: gameState.teamA,
-              },
-              {
-                name: "TEAM B",
-                score: gameState.teamB,
-              },
-              {
-                name: "TEAM C",
-                score: gameState.teamC,
-              },
-            ];
-
-            const winner = scores.reduce((a, b) =>
-              a.score > b.score ? a : b
-            );
-
-            updateGame({
-              winner: winner.name,
-            });
-
-          }}
-          className="bg-green-500 p-8 rounded-3xl text-3xl font-black"
-        >
-          REVEAL WINNER
-        </button>
-
-        <button
-          onClick={() =>
-            updateGame({
-              winner: "",
-            })
-          }
-          className="bg-green-900 p-8 rounded-3xl text-3xl font-black"
-        >
-          REMOVE WINNER
-        </button>
-
-        {/* END GAME */}
-
-        <button
-          onClick={() =>
-            updateGame({
-              endGame: true,
-            })
-          }
-          className="bg-black border-4 border-red-600 p-8 rounded-3xl text-3xl font-black"
-        >
-          END GAME
-        </button>
-
-        <button
-          onClick={() =>
-            updateGame({
-              endGame: false,
-            })
-          }
-          className="bg-gray-700 p-8 rounded-3xl text-3xl font-black"
-        >
-          REMOVE END GAME
-        </button>
-
-        {/* RESET */}
-
-        <button
-          onClick={() =>
-            updateGame({
-
-              teamA: 0,
-              teamB: 0,
-              teamC: 0,
-
-              question: "",
-              answer: "",
-
-              showAnswer: false,
-
-              timer: 30,
-              timerRunning: false,
-              showTimer: false,
-
-              winner: "",
-
-              showLeaderboard: false,
-
-              showChaosWheel: false,
-              chaosResult: "",
-
-              showIntro: false,
-
-              endGame: false,
-
-            })
-          }
-          className="bg-red-800 p-8 rounded-3xl text-3xl font-black col-span-2"
-        >
-          RESET ENTIRE GAME
         </button>
 
       </div>
