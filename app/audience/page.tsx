@@ -10,6 +10,17 @@ import {
   onValue,
 } from "firebase/database";
 
+const wheelOptions = [
+  "DOUBLE POINTS",
+  "LOSE 500",
+  "BONUS ROUND",
+  "TEAM SWAP",
+  "TRIPLE POINTS",
+  "STEAL POINTS",
+  "MYSTERY",
+  "FREE 1000",
+];
+
 export default function AudiencePage() {
 
   const [gameState, setGameState] = useState<any>({
@@ -34,6 +45,14 @@ export default function AudiencePage() {
 
   const [showIntro, setShowIntro] = useState(true);
 
+  const [showWheel, setShowWheel] = useState(false);
+
+  const [rotation, setRotation] = useState(0);
+
+  const [selected, setSelected] = useState("");
+
+  const [spinning, setSpinning] = useState(false);
+
   useEffect(() => {
 
     const timer = setTimeout(() => {
@@ -54,19 +73,52 @@ export default function AudiencePage() {
 
       if (data) {
         setGameState(data);
+
+        if (data.showChaosWheel) {
+          setShowWheel(true);
+        }
+
       }
 
     });
 
   }, []);
 
+  const spinWheel = () => {
+
+    if (spinning) return;
+
+    setSpinning(true);
+
+    const randomIndex = Math.floor(
+      Math.random() * wheelOptions.length
+    );
+
+    const chosen = wheelOptions[randomIndex];
+
+    const degreesPerOption = 360 / wheelOptions.length;
+
+    const stopRotation =
+      3600 +
+      (360 - randomIndex * degreesPerOption);
+
+    setRotation(stopRotation);
+
+    setTimeout(() => {
+
+      setSelected(chosen);
+
+      setSpinning(false);
+
+    }, 5000);
+
+  };
+
   if (showIntro) {
 
     return (
 
       <div className="min-h-screen bg-black flex items-center justify-center overflow-hidden relative">
-
-        {/* VIDEO */}
 
         <video
           autoPlay
@@ -79,11 +131,7 @@ export default function AudiencePage() {
           <source src="/videos/background.mp4" type="video/mp4" />
         </video>
 
-        {/* DARK OVERLAY */}
-
         <div className="absolute inset-0 bg-black/60" />
-
-        {/* INTRO TITLE */}
 
         <motion.h1
           initial={{ scale: 0 }}
@@ -104,7 +152,7 @@ export default function AudiencePage() {
 
     <div className="min-h-screen bg-black text-white overflow-hidden relative">
 
-      {/* VIDEO BACKGROUND */}
+      {/* VIDEO */}
 
       <video
         autoPlay
@@ -117,11 +165,9 @@ export default function AudiencePage() {
         <source src="/videos/background.mp4" type="video/mp4" />
       </video>
 
-      {/* OVERLAY */}
-
       <div className="fixed inset-0 bg-black/50 z-0" />
 
-      {/* CONTENT */}
+      {/* MAIN */}
 
       <div className="relative z-10 p-10">
 
@@ -154,7 +200,7 @@ export default function AudiencePage() {
             repeat: Infinity,
             duration: 2,
           }}
-          className="text-center text-yellow-400 text-9xl font-black mt-10 drop-shadow-[0_0_30px_gold]"
+          className="text-center text-yellow-400 text-9xl font-black mt-10"
         >
           CRACK IT!
         </motion.h1>
@@ -180,148 +226,196 @@ export default function AudiencePage() {
 
         <div className="flex justify-center gap-10 flex-wrap mt-14">
 
-          {/* TEAM A */}
+          {/* TEAM CARD COMPONENTS */}
 
-          <motion.div
-            animate={{
-              y: [0, -10, 0],
-            }}
-            transition={{
-              repeat: Infinity,
-              duration: 3,
-            }}
-            className="w-[300px] h-[420px] bg-blue-600 rounded-3xl p-10 shadow-[0_0_40px_#3b82f6]"
-          >
-
-            <div className="text-8xl text-center">
-              {gameState.teamAAvatar}
-            </div>
-
-            <div className="text-5xl font-black text-center mt-6">
-              {gameState.teamAName}
-            </div>
-
-            <motion.div
-              key={gameState.teamA}
-              initial={{ scale: 1.5 }}
-              animate={{ scale: 1 }}
-              className="text-center text-[120px] leading-none font-black mt-6"
-            >
-              {gameState.teamA}
-            </motion.div>
-
-          </motion.div>
-
-          {/* TEAM B */}
-
-          <motion.div
-            animate={{
-              y: [0, -10, 0],
-            }}
-            transition={{
-              repeat: Infinity,
-              duration: 3,
-              delay: 0.3,
-            }}
-            className="w-[300px] h-[420px] bg-pink-600 rounded-3xl p-10 shadow-[0_0_40px_#ec4899]"
-          >
-
-            <div className="text-8xl text-center">
-              {gameState.teamBAvatar}
-            </div>
-
-            <div className="text-5xl font-black text-center mt-6">
-              {gameState.teamBName}
-            </div>
+          {[
+            {
+              name: gameState.teamAName,
+              score: gameState.teamA,
+              avatar: gameState.teamAAvatar,
+              color: "bg-blue-600",
+              glow: "shadow-[0_0_40px_#3b82f6]",
+            },
+            {
+              name: gameState.teamBName,
+              score: gameState.teamB,
+              avatar: gameState.teamBAvatar,
+              color: "bg-pink-600",
+              glow: "shadow-[0_0_40px_#ec4899]",
+            },
+            {
+              name: gameState.teamCName,
+              score: gameState.teamC,
+              avatar: gameState.teamCAvatar,
+              color: "bg-green-600",
+              glow: "shadow-[0_0_40px_#22c55e]",
+            },
+          ].map((team, index) => (
 
             <motion.div
-              key={gameState.teamB}
-              initial={{ scale: 1.5 }}
-              animate={{ scale: 1 }}
-              className="text-center text-[120px] leading-none font-black mt-6"
-            >
-              {gameState.teamB}
-            </motion.div>
-
-          </motion.div>
-
-          {/* TEAM C */}
-
-          <motion.div
-            animate={{
-              y: [0, -10, 0],
-            }}
-            transition={{
-              repeat: Infinity,
-              duration: 3,
-              delay: 0.6,
-            }}
-            className="w-[300px] h-[420px] bg-green-600 rounded-3xl p-10 shadow-[0_0_40px_#22c55e]"
-          >
-
-            <div className="text-8xl text-center">
-              {gameState.teamCAvatar}
-            </div>
-
-            <div className="text-5xl font-black text-center mt-6">
-              {gameState.teamCName}
-            </div>
-
-            <motion.div
-              key={gameState.teamC}
-              initial={{ scale: 1.5 }}
-              animate={{ scale: 1 }}
-              className="text-center text-[120px] leading-none font-black mt-6"
-            >
-              {gameState.teamC}
-            </motion.div>
-
-          </motion.div>
-
-        </div>
-
-        {/* WINNER SCREEN */}
-
-        {gameState.winner && (
-
-          <motion.div
-            initial={{
-              scale: 0,
-              opacity: 0,
-            }}
-            animate={{
-              scale: 1,
-              opacity: 1,
-            }}
-            className="fixed inset-0 bg-black/90 flex items-center justify-center z-50"
-          >
-
-            <motion.div
+              key={team.name}
               animate={{
-                scale: [1, 1.08, 1],
+                y: [0, -10, 0],
               }}
               transition={{
                 repeat: Infinity,
-                duration: 1,
+                duration: 3,
+                delay: index * 0.3,
               }}
-              className="text-center"
+              className={`w-[320px] h-[430px] ${team.color} ${team.glow} rounded-3xl p-8 flex flex-col items-center justify-between`}
             >
 
-              <div className="text-yellow-400 text-[140px] font-black drop-shadow-[0_0_40px_gold]">
-                {gameState.winner}
+              <div className="text-8xl">
+                {team.avatar}
               </div>
 
-              <div className="text-white text-7xl font-black mt-4">
-                WINS!
+              <div className="text-5xl font-black text-center">
+                {team.name}
+              </div>
+
+              <motion.div
+                key={team.score}
+                initial={{ scale: 1.5 }}
+                animate={{ scale: 1 }}
+                className="flex items-center justify-center text-[120px] leading-none font-black w-full h-[180px]"
+              >
+                {team.score}
+              </motion.div>
+
+            </motion.div>
+
+          ))}
+
+        </div>
+
+      </div>
+
+      {/* CHAOS WHEEL POPUP */}
+
+      {showWheel && (
+
+        <div className="fixed inset-0 bg-black/90 z-50 flex flex-col items-center justify-center">
+
+          <motion.h1
+            animate={{
+              scale: [1, 1.08, 1],
+            }}
+            transition={{
+              repeat: Infinity,
+              duration: 1,
+            }}
+            className="text-yellow-400 text-8xl font-black mb-10"
+          >
+            CHAOS ROUND
+          </motion.h1>
+
+          {/* POINTER */}
+
+          <div className="w-0 h-0 border-l-[40px] border-r-[40px] border-b-[80px] border-l-transparent border-r-transparent border-b-yellow-400 z-20 mb-[-20px]" />
+
+          {/* WHEEL */}
+
+          <motion.div
+            animate={{
+              rotate: rotation,
+            }}
+            transition={{
+              duration: 5,
+              ease: "easeOut",
+            }}
+            className="relative w-[700px] h-[700px] rounded-full overflow-hidden border-[16px] border-blue-900 shadow-[0_0_80px_#60a5fa]"
+          >
+
+            {wheelOptions.map((option, index) => {
+
+              const colors = [
+                "#ec4899",
+                "#f97316",
+                "#ef4444",
+                "#d946ef",
+                "#22c55e",
+                "#eab308",
+                "#0ea5e9",
+                "#9333ea",
+              ];
+
+              return (
+
+                <div
+                  key={option}
+                  className="absolute w-1/2 h-1/2 origin-bottom-right"
+                  style={{
+                    transform: `rotate(${index * 45}deg) skewY(-45deg)`,
+                    background: colors[index],
+                    right: "50%",
+                    bottom: "50%",
+                  }}
+                >
+
+                  <div
+                    className="absolute text-white font-black text-center text-2xl"
+                    style={{
+                      transform: "skewY(45deg) rotate(22.5deg)",
+                      width: "240px",
+                      top: "70px",
+                      left: "10px",
+                    }}
+                  >
+                    {option}
+                  </div>
+
+                </div>
+
+              );
+
+            })}
+
+            {/* SPIN BUTTON */}
+
+            <div className="absolute inset-0 flex items-center justify-center">
+
+              <button
+                onClick={spinWheel}
+                className="w-[180px] h-[180px] rounded-full bg-blue-950 border-8 border-blue-700 text-5xl font-black"
+              >
+                SPIN
+              </button>
+
+            </div>
+
+          </motion.div>
+
+          {/* RESULT */}
+
+          {selected && (
+
+            <motion.div
+              initial={{
+                scale: 0,
+                opacity: 0,
+              }}
+              animate={{
+                scale: 1,
+                opacity: 1,
+              }}
+              className="mt-10 bg-black border-4 border-yellow-400 px-14 py-8 rounded-3xl"
+            >
+
+              <div className="text-white text-3xl font-black text-center">
+                RESULT
+              </div>
+
+              <div className="text-yellow-400 text-6xl font-black text-center mt-4">
+                {selected}
               </div>
 
             </motion.div>
 
-          </motion.div>
+          )}
 
-        )}
+        </div>
 
-      </div>
+      )}
 
     </div>
 
