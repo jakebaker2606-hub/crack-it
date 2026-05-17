@@ -1,5 +1,3 @@
-// app/host/page.tsx
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -12,24 +10,18 @@ import {
   onValue,
 } from "firebase/database";
 
-import { playSound, stopSound } from "../../lib/sounds";
-
 export default function HostPage() {
+
+  const [question, setQuestion] = useState("");
+
+  const [answer, setAnswer] = useState("");
+
+  const [timer, setTimerValue] = useState(30);
 
   const [gameState, setGameState] = useState<any>({
     teamA: 0,
     teamB: 0,
     teamC: 0,
-
-    round: 1,
-
-    question: "Waiting for next question...",
-
-    winner: "",
-
-    showChaosWheel: false,
-
-    chaosResult: "",
   });
 
   useEffect(() => {
@@ -54,207 +46,165 @@ export default function HostPage() {
 
   };
 
-  const addTeamA = async () => {
-
-    playSound("correct.mp3");
-
-    await updateGame({
-      teamA: gameState.teamA + 500,
-    });
-
-  };
-
-  const addTeamB = async () => {
-
-    playSound("correct.mp3");
-
-    await updateGame({
-      teamB: gameState.teamB + 500,
-    });
-
-  };
-
-  const addTeamC = async () => {
-
-    playSound("correct.mp3");
-
-    await updateGame({
-      teamC: gameState.teamC + 500,
-    });
-
-  };
-
-  const minusTeamA = async () => {
-
-    playSound("wrong.mp3");
-
-    await updateGame({
-      teamA: Math.max(0, gameState.teamA - 500),
-    });
-
-  };
-
-  const minusTeamB = async () => {
-
-    playSound("wrong.mp3");
-
-    await updateGame({
-      teamB: Math.max(0, gameState.teamB - 500),
-    });
-
-  };
-
-  const minusTeamC = async () => {
-
-    playSound("wrong.mp3");
-
-    await updateGame({
-      teamC: Math.max(0, gameState.teamC - 500),
-    });
-
-  };
-
-  const openChaosRound = async () => {
-
-    await updateGame({
-      showChaosWheel: true,
-      chaosResult: "",
-    });
-
-  };
-
-  const closeChaosRound = async () => {
-
-    await updateGame({
-      showChaosWheel: false,
-      chaosResult: "",
-    });
-
-  };
-
   return (
 
     <div className="min-h-screen bg-black text-white p-10">
 
-      <h1 className="text-7xl font-black text-center text-yellow-400 mb-10">
+      <h1 className="text-7xl font-black text-yellow-400 text-center mb-10">
         HOST CONTROL PANEL
       </h1>
 
-      <div className="grid grid-cols-2 gap-8">
+      {/* QUESTION */}
+
+      <div className="grid gap-6 mb-10">
+
+        <input
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          placeholder="Enter Question"
+          className="p-6 rounded-2xl text-black text-3xl font-bold"
+        />
 
         <button
-          onClick={addTeamA}
+          onClick={() =>
+            updateGame({
+              question,
+            })
+          }
+          className="bg-yellow-500 text-black p-6 rounded-2xl text-3xl font-black"
+        >
+          SHOW QUESTION
+        </button>
+
+        <input
+          value={answer}
+          onChange={(e) => setAnswer(e.target.value)}
+          placeholder="Enter Answer"
+          className="p-6 rounded-2xl text-black text-3xl font-bold"
+        />
+
+        <button
+          onClick={() =>
+            updateGame({
+              answer,
+              showAnswer: true,
+            })
+          }
+          className="bg-green-600 p-6 rounded-2xl text-3xl font-black"
+        >
+          SHOW ANSWER
+        </button>
+
+      </div>
+
+      {/* TIMER */}
+
+      <div className="grid grid-cols-3 gap-6 mb-10">
+
+        <input
+          type="number"
+          value={timer}
+          onChange={(e) =>
+            setTimerValue(Number(e.target.value))
+          }
+          className="p-6 rounded-2xl text-black text-3xl font-bold"
+        />
+
+        <button
+          onClick={() =>
+            updateGame({
+              timer,
+              timerRunning: true,
+            })
+          }
+          className="bg-blue-600 p-6 rounded-2xl text-3xl font-black"
+        >
+          START TIMER
+        </button>
+
+        <button
+          onClick={() =>
+            updateGame({
+              timerRunning: false,
+            })
+          }
+          className="bg-red-700 p-6 rounded-2xl text-3xl font-black"
+        >
+          STOP TIMER
+        </button>
+
+      </div>
+
+      {/* TEAM BUTTONS */}
+
+      <div className="grid grid-cols-3 gap-6">
+
+        <button
+          onClick={() =>
+            updateGame({
+              teamA: gameState.teamA + 500,
+            })
+          }
           className="bg-blue-600 p-10 rounded-3xl text-3xl font-black"
         >
           TEAM A +500
         </button>
 
         <button
-          onClick={minusTeamA}
-          className="bg-red-700 p-10 rounded-3xl text-3xl font-black"
-        >
-          TEAM A -500
-        </button>
-
-        <button
-          onClick={addTeamB}
+          onClick={() =>
+            updateGame({
+              teamB: gameState.teamB + 500,
+            })
+          }
           className="bg-pink-600 p-10 rounded-3xl text-3xl font-black"
         >
           TEAM B +500
         </button>
 
         <button
-          onClick={minusTeamB}
-          className="bg-red-700 p-10 rounded-3xl text-3xl font-black"
-        >
-          TEAM B -500
-        </button>
-
-        <button
-          onClick={addTeamC}
+          onClick={() =>
+            updateGame({
+              teamC: gameState.teamC + 500,
+            })
+          }
           className="bg-green-600 p-10 rounded-3xl text-3xl font-black"
         >
           TEAM C +500
         </button>
 
-        <button
-          onClick={minusTeamC}
-          className="bg-red-700 p-10 rounded-3xl text-3xl font-black"
-        >
-          TEAM C -500
-        </button>
+      </div>
+
+      {/* GAME CONTROLS */}
+
+      <div className="grid grid-cols-2 gap-6 mt-10">
 
         <button
           onClick={() =>
             updateGame({
-              winner: "TEAM A",
+              showChaosWheel: true,
+              chaosResult: "",
             })
           }
-          className="bg-blue-800 p-10 rounded-3xl text-3xl font-black"
-        >
-          TEAM A WINS
-        </button>
-
-        <button
-          onClick={() =>
-            updateGame({
-              winner: "TEAM B",
-            })
-          }
-          className="bg-pink-800 p-10 rounded-3xl text-3xl font-black"
-        >
-          TEAM B WINS
-        </button>
-
-        <button
-          onClick={() =>
-            updateGame({
-              winner: "TEAM C",
-            })
-          }
-          className="bg-green-800 p-10 rounded-3xl text-3xl font-black"
-        >
-          TEAM C WINS
-        </button>
-
-        <button
-          onClick={() =>
-            updateGame({
-              winner: "",
-            })
-          }
-          className="bg-gray-700 p-10 rounded-3xl text-3xl font-black"
-        >
-          CLEAR WINNER
-        </button>
-
-        <button
-          onClick={openChaosRound}
-          className="bg-yellow-500 text-black p-10 rounded-3xl text-3xl font-black"
+          className="bg-yellow-500 text-black p-8 rounded-3xl text-3xl font-black"
         >
           OPEN CHAOS ROUND
         </button>
 
         <button
-          onClick={closeChaosRound}
-          className="bg-gray-700 p-10 rounded-3xl text-3xl font-black"
-        >
-          CLOSE CHAOS ROUND
-        </button>
-
-        <button
-          onClick={() => {
-
-            stopSound();
-
+          onClick={() =>
             updateGame({
-              timer: 0,
-            });
-
-          }}
-          className="bg-red-900 p-10 rounded-3xl text-3xl font-black"
+              teamA: 0,
+              teamB: 0,
+              teamC: 0,
+              question: "Waiting for next question...",
+              answer: "",
+              showAnswer: false,
+              winner: "",
+            })
+          }
+          className="bg-red-800 p-8 rounded-3xl text-3xl font-black"
         >
-          STOP TIMER
+          RESET GAME
         </button>
 
       </div>
