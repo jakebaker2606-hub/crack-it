@@ -9,7 +9,7 @@ import { db } from "../../lib/firebase";
 import {
   ref,
   onValue,
-  update,
+ update,
 } from "firebase/database";
 
 const wheelOptions = [
@@ -26,45 +26,42 @@ const wheelOptions = [
 export default function AudiencePage() {
 
   const [gameState, setGameState] = useState<any>({
-    showLeaderboard: false,
     teamA: 0,
     teamB: 0,
     teamC: 0,
 
-    teamAName: "Team A",
-    teamBName: "Team B",
-    teamCName: "Team C",
-
-    teamAAvatar: "🦊",
-    teamBAvatar: "🐼",
-    teamCAvatar: "🐸",
-
-    question: "Waiting for next question...",
+    question: "",
 
     answer: "",
 
     showAnswer: false,
 
-    round: 1,
-
-    winner: "",
-
     timer: 30,
 
     timerRunning: false,
 
+    showTimer: false,
+
     showChaosWheel: false,
 
     chaosResult: "",
-  });
 
-  const [showIntro, setShowIntro] = useState(true);
+    showLeaderboard: false,
+
+    winner: "",
+
+    showIntro: false,
+
+    endGame: false,
+  });
 
   const [rotation, setRotation] = useState(0);
 
   const [spinning, setSpinning] = useState(false);
 
   const timerAudio = useRef<HTMLAudioElement | null>(null);
+
+  /* AUDIO */
 
   useEffect(() => {
 
@@ -74,53 +71,68 @@ export default function AudiencePage() {
 
   }, []);
 
-  useEffect(() => {
-
-    const introTimer = setTimeout(() => {
-      setShowIntro(false);
-    }, 10000);
-
-    return () => clearTimeout(introTimer);
-
-  }, []);
+  /* FIREBASE */
 
   useEffect(() => {
 
     const gameRef = ref(db, "game");
 
-    onValue(gameRef, (snapshot) => {
+    const unsubscribe = onValue(gameRef, async (snapshot) => {
 
       const data = snapshot.val();
 
-      if (data) {
+      if (!data) return;
 
-        setGameState(data);
+      setGameState(data);
 
-        if (data.timerRunning) {
+      /* TIMER AUDIO */
 
-          timerAudio.current?.play();
+      if (data.timerRunning) {
 
-        } else {
+        try {
 
-          timerAudio.current?.pause();
+          await timerAudio.current?.play();
 
-          if (timerAudio.current) {
-            timerAudio.current.currentTime = 0;
-          }
+        } catch (err) {}
 
+      } else {
+
+        timerAudio.current?.pause();
+
+        if (timerAudio.current) {
+          timerAudio.current.currentTime = 0;
         }
+
+      }
+
+      /* AUTO SPIN */
+
+      if (
+        data.showChaosWheel &&
+        !data.chaosResult &&
+        !spinning
+      ) {
+
+        spinWheel();
 
       }
 
     });
 
-  }, []);
+    return () => unsubscribe();
+
+  }, [spinning]);
+
+  /* TIMER */
 
   useEffect(() => {
 
     let interval: any;
 
-    if (gameState.timerRunning && gameState.timer > 0) {
+    if (
+      gameState.timerRunning &&
+      gameState.timer > 0
+    ) {
 
       interval = setInterval(async () => {
 
@@ -132,17 +144,42 @@ export default function AudiencePage() {
 
     }
 
-    if (gameState.timer <= 0) {
+    if (
+      gameState.timerRunning &&
+      gameState.timer <= 0
+    ) {
 
       update(ref(db, "game"), {
         timerRunning: false,
+        showTimer: false,
       });
 
     }
 
     return () => clearInterval(interval);
 
-  }, [gameState.timerRunning, gameState.timer]);
+  }, [
+    gameState.timerRunning,
+    gameState.timer,
+  ]);
+
+  /* FORMAT SCORE */
+
+  const formatScore = (score: number) => {
+
+    if (score >= 1000000) {
+      return `${(score / 1000000).toFixed(1)}M`;
+    }
+
+    if (score >= 1000) {
+      return `${(score / 1000).toFixed(1)}K`;
+    }
+
+    return score.toString();
+
+  };
+
+  /* SPIN */
 
   const spinWheel = async () => {
 
@@ -154,9 +191,11 @@ export default function AudiencePage() {
       Math.random() * wheelOptions.length
     );
 
-    const chosen = wheelOptions[randomIndex];
+    const selected =
+      wheelOptions[randomIndex];
 
-    const degreesPerOption = 360 / wheelOptions.length;
+    const degreesPerOption =
+      360 / wheelOptions.length;
 
     const stopRotation =
       3600 +
@@ -167,7 +206,7 @@ export default function AudiencePage() {
     setTimeout(async () => {
 
       await update(ref(db, "game"), {
-        chaosResult: chosen,
+        chaosResult: selected,
       });
 
       setSpinning(false);
@@ -176,7 +215,9 @@ export default function AudiencePage() {
 
   };
 
-  if (showIntro) {
+  /* INTRO */
+
+  if (gameState.showIntro) {
 
     return (
 
@@ -187,10 +228,12 @@ export default function AudiencePage() {
           muted
           loop
           playsInline
-          preload="auto"
           className="absolute inset-0 w-full h-full object-cover opacity-30"
         >
-          <source src="/videos/background.mp4" type="video/mp4" />
+          <source
+            src="/videos/background.mp4"
+            type="video/mp4"
+          />
         </video>
 
         <div className="absolute inset-0 bg-black/60" />
@@ -210,38 +253,57 @@ export default function AudiencePage() {
 
   }
 
+  /* END GAME */
+
+  if (gameState.endGame) {
+
+    return (
+
+      <div className="min-h-screen bg-black flex items-center justify-center">
+
+        <motion.h1
+          animate={{
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            repeat: Infinity,
+            duration: 1,
+          }}
+          className="text-red-500 text-[140px] font-black"
+        >
+          GAME OVER
+        </motion.h1>
+
+      </div>
+
+    );
+
+  }
+
   return (
 
     <div className="min-h-screen bg-black text-white relative overflow-hidden">
 
-      {/* BACKGROUND VIDEO */}
+      {/* VIDEO */}
 
       <video
         autoPlay
         muted
         loop
         playsInline
-        preload="auto"
         className="fixed inset-0 w-full h-full object-cover opacity-30 z-0"
       >
-        <source src="/videos/background.mp4" type="video/mp4" />
+        <source
+          src="/videos/background.mp4"
+          type="video/mp4"
+        />
       </video>
 
-      <div className="fixed inset-0 bg-black/50 z-0" />
+      <div className="fixed inset-0 bg-black/60 z-0" />
 
       {/* MAIN */}
 
       <div className="relative z-10 p-10">
-
-        {/* ROUND */}
-
-        <div className="flex justify-center mb-6">
-
-          <div className="bg-purple-600 px-10 py-4 rounded-3xl text-5xl font-black">
-            ROUND {gameState.round}
-          </div>
-
-        </div>
 
         {/* TITLE */}
 
@@ -251,24 +313,28 @@ export default function AudiencePage() {
 
         {/* TIMER */}
 
-        <div className="flex justify-center mt-6">
+        {gameState.showTimer && (
 
-          <motion.div
-            animate={{
-              scale: gameState.timerRunning
-                ? [1, 1.08, 1]
-                : 1,
-            }}
-            transition={{
-              repeat: Infinity,
-              duration: 1,
-            }}
-            className="bg-red-600 text-white text-7xl font-black px-14 py-6 rounded-3xl shadow-[0_0_40px_red]"
-          >
-            {gameState.timer}
-          </motion.div>
+          <div className="flex justify-center mt-6">
 
-        </div>
+            <motion.div
+              animate={{
+                scale: gameState.timerRunning
+                  ? [1, 1.08, 1]
+                  : 1,
+              }}
+              transition={{
+                repeat: Infinity,
+                duration: 1,
+              }}
+              className="bg-red-600 text-white text-7xl font-black px-14 py-6 rounded-3xl shadow-[0_0_40px_red]"
+            >
+              {gameState.timer}
+            </motion.div>
+
+          </div>
+
+        )}
 
         {/* QUESTION */}
 
@@ -284,12 +350,13 @@ export default function AudiencePage() {
           }}
           className="bg-yellow-400 text-black text-center text-5xl font-black p-10 rounded-3xl mt-10"
         >
-          {gameState.question}
+          {gameState.question || "Waiting for next question..."}
         </motion.div>
 
         {/* ANSWER */}
 
-        {gameState.showAnswer && (
+        {gameState.showAnswer &&
+          gameState.answer && (
 
           <motion.div
             initial={{
@@ -313,21 +380,18 @@ export default function AudiencePage() {
 
           {[
             {
-              name: gameState.teamAName,
+              name: "TEAM A",
               score: gameState.teamA,
-              avatar: gameState.teamAAvatar,
               color: "bg-blue-600",
             },
             {
-              name: gameState.teamBName,
+              name: "TEAM B",
               score: gameState.teamB,
-              avatar: gameState.teamBAvatar,
               color: "bg-pink-600",
             },
             {
-              name: gameState.teamCName,
+              name: "TEAM C",
               score: gameState.teamC,
-              avatar: gameState.teamCAvatar,
               color: "bg-green-600",
             },
           ].map((team) => (
@@ -341,28 +405,15 @@ export default function AudiencePage() {
                 repeat: Infinity,
                 duration: 3,
               }}
-              className={`w-[320px] h-[430px] rounded-3xl p-8 ${team.color} flex flex-col items-center justify-between shadow-2xl`}
+              className={`${team.color} w-[320px] h-[420px] rounded-3xl flex flex-col items-center justify-center shadow-2xl`}
             >
 
-              <div className="text-8xl">
-                {team.avatar}
-              </div>
-
-              <div className="text-5xl font-black text-center">
+              <div className="text-5xl font-black">
                 {team.name}
               </div>
 
-              <div className="flex items-center justify-center w-full h-[180px] overflow-hidden">
-
-                <motion.div
-                  key={team.score}
-                  initial={{ scale: 1.5 }}
-                  animate={{ scale: 1 }}
-                  className="text-[120px] leading-none font-black text-center"
-                >
-                  {team.score}
-                </motion.div>
-
+              <div className="text-[90px] font-black mt-10">
+                {formatScore(team.score)}
               </div>
 
             </motion.div>
@@ -373,7 +424,7 @@ export default function AudiencePage() {
 
       </div>
 
-      {/* CHAOS WHEEL */}
+      {/* CHAOS ROUND */}
 
       {gameState.showChaosWheel && (
 
@@ -397,7 +448,7 @@ export default function AudiencePage() {
               duration: 5,
               ease: "easeOut",
             }}
-            className="relative w-[700px] h-[700px] rounded-full border-[16px] border-blue-800 shadow-[0_0_60px_#3b82f6]"
+            className="relative w-[700px] h-[700px] rounded-full border-[16px] border-blue-800"
             style={{
               background: `
                 conic-gradient(
@@ -424,11 +475,11 @@ export default function AudiencePage() {
 
                 <div
                   key={option}
-                  className="absolute left-1/2 top-1/2 text-white font-black text-2xl"
+                  className="absolute left-1/2 top-1/2 text-white font-black text-xl"
                   style={{
                     transform: `
                       rotate(${angle + 22.5}deg)
-                      translateY(-280px)
+                      translateY(-260px)
                       rotate(90deg)
                     `,
                     transformOrigin: "center",
@@ -445,12 +496,9 @@ export default function AudiencePage() {
 
             <div className="absolute inset-0 flex items-center justify-center">
 
-              <button
-                onClick={spinWheel}
-                className="w-[180px] h-[180px] rounded-full bg-blue-950 border-8 border-blue-700 text-5xl font-black shadow-[0_0_40px_#3b82f6]"
-              >
-                SPIN
-              </button>
+              <div className="w-[180px] h-[180px] rounded-full bg-blue-950 border-8 border-blue-700 flex items-center justify-center text-5xl font-black">
+                CHAOS
+              </div>
 
             </div>
 
@@ -487,75 +535,66 @@ export default function AudiencePage() {
         </div>
 
       )}
-{/* LEADERBOARD */}
 
-{gameState.showLeaderboard && (
+      {/* LEADERBOARD */}
 
-  <div className="fixed inset-0 bg-black/95 z-[90] flex flex-col items-center justify-center">
+      {gameState.showLeaderboard && (
 
-    <h1 className="text-yellow-400 text-8xl font-black mb-16">
-      LEADERBOARD
-    </h1>
+        <div className="fixed inset-0 bg-black/95 z-[90] flex flex-col items-center justify-center">
 
-    <div className="flex gap-10">
+          <h1 className="text-yellow-400 text-8xl font-black mb-16">
+            LEADERBOARD
+          </h1>
 
-      {[
-        {
-          name: "TEAM A",
-          score: gameState.teamA,
-          color: "bg-blue-600",
-        },
-        {
-          name: "TEAM B",
-          score: gameState.teamB,
-          color: "bg-pink-600",
-        },
-        {
-          name: "TEAM C",
-          score: gameState.teamC,
-          color: "bg-green-600",
-        },
-      ]
-        .sort((a, b) => b.score - a.score)
-        .map((team, index) => (
+          <div className="flex gap-10">
 
-          <motion.div
-            key={team.name}
-            initial={{
-              y: 200,
-              opacity: 0,
-            }}
-            animate={{
-              y: 0,
-              opacity: 1,
-            }}
-            transition={{
-              delay: index * 0.3,
-            }}
-            className={`${team.color} w-[320px] h-[420px] rounded-3xl flex flex-col items-center justify-center`}
-          >
+            {[
+              {
+                name: "TEAM A",
+                score: gameState.teamA,
+                color: "bg-blue-600",
+              },
+              {
+                name: "TEAM B",
+                score: gameState.teamB,
+                color: "bg-pink-600",
+              },
+              {
+                name: "TEAM C",
+                score: gameState.teamC,
+                color: "bg-green-600",
+              },
+            ]
+              .sort((a, b) => b.score - a.score)
+              .map((team, index) => (
 
-            <div className="text-7xl font-black mb-6">
-              #{index + 1}
-            </div>
+                <div
+                  key={team.name}
+                  className={`${team.color} w-[320px] h-[420px] rounded-3xl flex flex-col items-center justify-center`}
+                >
 
-            <div className="text-5xl font-black">
-              {team.name}
-            </div>
+                  <div className="text-7xl font-black">
+                    #{index + 1}
+                  </div>
 
-            <div className="text-8xl font-black mt-10">
-              {team.score}
-            </div>
+                  <div className="text-5xl font-black mt-6">
+                    {team.name}
+                  </div>
 
-          </motion.div>
+                  <div className="text-8xl font-black mt-10">
+                    {formatScore(team.score)}
+                  </div>
 
-        ))}
+                </div>
 
-    </div>
+              ))}
 
-  </div>
+          </div>
 
-)}
+        </div>
+
+      )}
+
       {/* WINNER */}
 
       {gameState.winner && (
