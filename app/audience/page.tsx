@@ -144,7 +144,7 @@ export default function AudiencePage() {
     game.timer,
   ]);
 
-  /* WHEEL */
+  /* SPIN WHEEL */
 
   const spinWheel = async () => {
 
@@ -156,12 +156,12 @@ export default function AudiencePage() {
 
     const selected = wheelOptions[randomIndex];
 
-    const degreesPerOption =
+    const segmentAngle =
       360 / wheelOptions.length;
 
     const finalRotation =
       3600 +
-      (360 - randomIndex * degreesPerOption);
+      (360 - randomIndex * segmentAngle);
 
     setRotation(finalRotation);
 
@@ -275,7 +275,7 @@ export default function AudiencePage() {
 
         )}
 
-        {/* TEAMS */}
+        {/* TEAM SCORES */}
 
         <div className="flex justify-center gap-10 mt-16 flex-wrap">
 
@@ -387,75 +387,129 @@ export default function AudiencePage() {
 
         <div className="fixed inset-0 z-[200] bg-black/90 flex flex-col items-center justify-center">
 
-          {/* TITLE */}
-
-          <h1 className="text-yellow-400 text-8xl font-black mb-10 tracking-widest">
+          <h1 className="text-yellow-400 text-8xl font-black mb-8">
             CHAOS ROUND
           </h1>
 
           {/* POINTER */}
 
-          <div className="w-0 h-0 border-l-[35px] border-r-[35px] border-b-[70px] border-l-transparent border-r-transparent border-b-yellow-400 z-50 mb-[-20px]" />
+          <div className="w-0 h-0 border-l-[30px] border-r-[30px] border-b-[60px] border-l-transparent border-r-transparent border-b-yellow-400 z-50 mb-[-15px]" />
 
           {/* WHEEL */}
 
           <div className="relative">
 
-            {/* OUTER GLOW */}
-
-            <div className="absolute inset-0 rounded-full blur-3xl bg-purple-500 opacity-40 scale-110" />
-
-            {/* MAIN WHEEL */}
-
             <div
               style={{
                 transform: `rotate(${rotation}deg)`,
-                transition: "transform 5s cubic-bezier(0.17, 0.67, 0.12, 0.99)",
+                transition: spinning
+                  ? "transform 5s cubic-bezier(0.17,0.67,0.12,0.99)"
+                  : "none",
               }}
-              className="relative w-[650px] h-[650px] rounded-full border-[18px] border-blue-700 overflow-hidden shadow-[0_0_80px_rgba(168,85,247,0.9)]"
+              className="relative w-[650px] h-[650px] rounded-full overflow-hidden border-[16px] border-blue-700 shadow-[0_0_50px_rgba(0,0,255,0.8)]"
             >
 
-              {wheelOptions.map((option, index) => {
+              <svg
+                viewBox="0 0 100 100"
+                className="w-full h-full"
+              >
 
-                const angle =
-                  (360 / wheelOptions.length) * index;
+                {wheelOptions.map((option, index) => {
 
-                const colors = [
-                  "#ff0055",
-                  "#ff8800",
-                  "#ffd000",
-                  "#00d936",
-                  "#00b7ff",
-                  "#7a00ff",
-                  "#ff00d4",
-                  "#ff3b3b",
-                ];
+                  const colors = [
+                    "#ff0055",
+                    "#ff8800",
+                    "#ffd000",
+                    "#00d936",
+                    "#00b7ff",
+                    "#7a00ff",
+                    "#ff00d4",
+                    "#ff3333",
+                  ];
 
-                return (
+                  const angle =
+                    (360 / wheelOptions.length) * index;
 
-                  <div
-                    key={option}
-                    style={{
-                      transform: `rotate(${angle}deg) skewY(-45deg)`,
-                      background: colors[index],
-                    }}
-                    className="absolute w-1/2 h-1/2 origin-bottom-right right-1/2 bottom-1/2 border border-black"
-                  >
+                  const nextAngle =
+                    angle +
+                    360 / wheelOptions.length;
 
-                    <div
-                      style={{
-                        transform: "skewY(45deg) rotate(22deg)",
-                      }}
-                      className="absolute left-[55px] top-[120px] text-white font-black text-2xl w-[180px] text-center drop-shadow-[0_0_10px_black]"
-                    >
-                      {option}
-                    </div>
+                  const x1 =
+                    50 +
+                    50 *
+                      Math.cos(
+                        (Math.PI * angle) / 180
+                      );
 
-                  </div>
+                  const y1 =
+                    50 +
+                    50 *
+                      Math.sin(
+                        (Math.PI * angle) / 180
+                      );
 
-                );
+                  const x2 =
+                    50 +
+                    50 *
+                      Math.cos(
+                        (Math.PI * nextAngle) / 180
+                      );
 
-              })}
+                  const y2 =
+                    50 +
+                    50 *
+                      Math.sin(
+                        (Math.PI * nextAngle) / 180
+                      );
+
+                  const textAngle =
+                    angle + 22.5;
+
+                  const textX =
+                    50 +
+                    30 *
+                      Math.cos(
+                        (Math.PI * textAngle) / 180
+                      );
+
+                  const textY =
+                    50 +
+                    30 *
+                      Math.sin(
+                        (Math.PI * textAngle) / 180
+                      );
+
+                  return (
+
+                    <g key={option}>
+
+                      <path
+                        d={`M50,50 L${x1},${y1} A50,50 0 0,1 ${x2},${y2} Z`}
+                        fill={colors[index]}
+                        stroke="black"
+                        strokeWidth="0.5"
+                      />
+
+                      <text
+                        x={textX}
+                        y={textY}
+                        fill="white"
+                        fontSize="4"
+                        fontWeight="bold"
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        transform={`rotate(${textAngle} ${textX} ${textY})`}
+                      >
+                        {option}
+                      </text>
+
+                    </g>
+
+                  );
+
+                })}
+
+              </svg>
 
               {/* CENTER */}
 
@@ -475,7 +529,7 @@ export default function AudiencePage() {
 
           {game.chaosResult && (
 
-            <div className="mt-12 bg-yellow-400 text-black px-16 py-8 rounded-3xl text-6xl font-black shadow-[0_0_50px_rgba(255,208,0,0.8)] animate-bounce">
+            <div className="mt-12 bg-yellow-400 text-black px-16 py-8 rounded-3xl text-6xl font-black animate-bounce shadow-[0_0_40px_rgba(255,255,0,0.8)]">
               {game.chaosResult}
             </div>
 
