@@ -13,9 +13,7 @@ import {
 export default function HostPage() {
 
   const [question, setQuestion] = useState("");
-
   const [answer, setAnswer] = useState("");
-
   const [timerInput, setTimerInput] = useState(30);
 
   const [game, setGame] = useState<any>({
@@ -42,23 +40,8 @@ export default function HostPage() {
 
   }, []);
 
-  const sendQuestion = async () => {
-
-    await update(ref(db, "game"), {
-      question: question,
-      answer: "",
-      showAnswer: false,
-    });
-
-  };
-
-  const sendAnswer = async () => {
-
-    await update(ref(db, "game"), {
-      answer: answer,
-      showAnswer: true,
-    });
-
+  const updateGame = async (data: any) => {
+    await update(ref(db, "game"), data);
   };
 
   const updateScore = async (
@@ -68,27 +51,8 @@ export default function HostPage() {
 
     const current = game[team] || 0;
 
-    await update(ref(db, "game"), {
+    await updateGame({
       [team]: Math.max(0, current + amount),
-    });
-
-  };
-
-  const startTimer = async () => {
-
-    await update(ref(db, "game"), {
-      timer: timerInput,
-      timerRunning: true,
-      showTimer: true,
-    });
-
-  };
-
-  const stopTimer = async () => {
-
-    await update(ref(db, "game"), {
-      timerRunning: false,
-      showTimer: false,
     });
 
   };
@@ -111,7 +75,13 @@ export default function HostPage() {
       />
 
       <button
-        onClick={sendQuestion}
+        onClick={() =>
+          updateGame({
+            question,
+            answer: "",
+            showAnswer: false,
+          })
+        }
         className="bg-yellow-400 text-black p-6 rounded-2xl text-3xl font-black"
       >
         SHOW QUESTION
@@ -127,7 +97,12 @@ export default function HostPage() {
       />
 
       <button
-        onClick={sendAnswer}
+        onClick={() =>
+          updateGame({
+            answer,
+            showAnswer: true,
+          })
+        }
         className="bg-green-500 p-6 rounded-2xl text-3xl font-black"
       >
         SHOW ANSWER
@@ -147,14 +122,25 @@ export default function HostPage() {
         />
 
         <button
-          onClick={startTimer}
+          onClick={() =>
+            updateGame({
+              timer: timerInput,
+              timerRunning: true,
+              showTimer: true,
+            })
+          }
           className="bg-red-500 p-6 rounded-2xl text-3xl font-black"
         >
           START TIMER
         </button>
 
         <button
-          onClick={stopTimer}
+          onClick={() =>
+            updateGame({
+              timerRunning: false,
+              showTimer: false,
+            })
+          }
           className="bg-red-900 p-6 rounded-2xl text-3xl font-black"
         >
           STOP TIMER
@@ -164,7 +150,7 @@ export default function HostPage() {
 
       {/* SCORES */}
 
-      <div className="grid grid-cols-3 gap-5 mt-10">
+      <div className="grid grid-cols-3 gap-5">
 
         <div className="bg-blue-600 p-6 rounded-3xl flex flex-col gap-4">
 
@@ -233,6 +219,83 @@ export default function HostPage() {
         </div>
 
       </div>
+
+      {/* CHAOS ROUND */}
+
+      <button
+        onClick={() =>
+          updateGame({
+            showChaosWheel: true,
+            chaosResult: "",
+          })
+        }
+        className="bg-purple-600 p-6 rounded-2xl text-3xl font-black"
+      >
+        START CHAOS ROUND
+      </button>
+
+      {/* WINNER */}
+
+      <div className="grid grid-cols-3 gap-5">
+
+        <button
+          onClick={() =>
+            updateGame({
+              winner: "TEAM A",
+            })
+          }
+          className="bg-blue-700 p-6 rounded-2xl text-3xl font-black"
+        >
+          TEAM A WINS
+        </button>
+
+        <button
+          onClick={() =>
+            updateGame({
+              winner: "TEAM B",
+            })
+          }
+          className="bg-pink-700 p-6 rounded-2xl text-3xl font-black"
+        >
+          TEAM B WINS
+        </button>
+
+        <button
+          onClick={() =>
+            updateGame({
+              winner: "TEAM C",
+            })
+          }
+          className="bg-green-700 p-6 rounded-2xl text-3xl font-black"
+        >
+          TEAM C WINS
+        </button>
+
+      </div>
+
+      {/* RESET */}
+
+      <button
+        onClick={() =>
+          updateGame({
+            question: "",
+            answer: "",
+            showAnswer: false,
+            showTimer: false,
+            timerRunning: false,
+            timer: 30,
+            showChaosWheel: false,
+            chaosResult: "",
+            winner: "",
+            teamA: 0,
+            teamB: 0,
+            teamC: 0,
+          })
+        }
+        className="bg-white text-black p-6 rounded-2xl text-3xl font-black"
+      >
+        RESET GAME
+      </button>
 
     </div>
 
