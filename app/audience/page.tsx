@@ -6,7 +6,7 @@ import { db } from "../../lib/firebase";
 
 import {
   ref,
-  onValue,
+ onValue,
   update,
 } from "firebase/database";
 
@@ -27,15 +27,6 @@ export default function AudiencePage() {
     teamA: 0,
     teamB: 0,
     teamC: 0,
-    question: "",
-    answer: "",
-    showAnswer: false,
-    timer: 30,
-    timerRunning: false,
-    showTimer: false,
-    showChaosWheel: false,
-    chaosResult: "",
-    winner: "",
   });
 
   const [rotation, setRotation] = useState(0);
@@ -167,9 +158,67 @@ export default function AudiencePage() {
 
   };
 
+  const leaderboard = [
+    {
+      name: "TEAM A",
+      score: game.teamA || 0,
+      color: "bg-blue-600",
+    },
+    {
+      name: "TEAM B",
+      score: game.teamB || 0,
+      color: "bg-pink-600",
+    },
+    {
+      name: "TEAM C",
+      score: game.teamC || 0,
+      color: "bg-green-600",
+    },
+  ].sort((a, b) => b.score - a.score);
+
   return (
 
     <div className="min-h-screen bg-black text-white p-10 relative overflow-hidden">
+
+      {/* INTRO */}
+
+      {game.showIntro && (
+
+        <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
+
+          <div className="text-center">
+
+            <div className="text-yellow-400 text-9xl font-black animate-pulse">
+              CRACK IT!
+            </div>
+
+            <div className="text-white text-4xl mt-10">
+              THE ULTIMATE QUIZ SHOW
+            </div>
+
+          </div>
+
+        </div>
+
+      )}
+
+      {/* END GAME */}
+
+      {game.showEndGame && (
+
+        <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
+
+          <div className="text-center">
+
+            <div className="text-red-500 text-9xl font-black">
+              GAME OVER
+            </div>
+
+          </div>
+
+        </div>
+
+      )}
 
       <h1 className="text-yellow-400 text-8xl font-black text-center">
         CRACK IT!
@@ -247,6 +296,47 @@ export default function AudiencePage() {
 
       </div>
 
+      {/* LEADERBOARD */}
+
+      {game.showLeaderboard && (
+
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50">
+
+          <div className="bg-white text-black p-16 rounded-3xl w-[700px]">
+
+            <h2 className="text-6xl font-black text-center mb-10">
+              LEADERBOARD
+            </h2>
+
+            <div className="flex flex-col gap-5">
+
+              {leaderboard.map((team, index) => (
+
+                <div
+                  key={team.name}
+                  className={`${team.color} text-white p-6 rounded-2xl flex justify-between text-4xl font-black`}
+                >
+
+                  <div>
+                    #{index + 1} {team.name}
+                  </div>
+
+                  <div>
+                    {formatScore(team.score)}
+                  </div>
+
+                </div>
+
+              ))}
+
+            </div>
+
+          </div>
+
+        </div>
+
+      )}
+
       {/* CHAOS WHEEL */}
 
       {game.showChaosWheel && (
@@ -301,12 +391,18 @@ export default function AudiencePage() {
 
       {game.winner && (
 
-        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-50">
 
-          <div className="text-yellow-400 text-9xl font-black text-center">
-            {game.winner}
-            <br />
-            WINS!
+          <div className="text-center">
+
+            <div className="text-yellow-400 text-9xl font-black animate-pulse">
+              {game.winner}
+            </div>
+
+            <div className="text-white text-6xl mt-10">
+              ARE THE CHAMPIONS!
+            </div>
+
           </div>
 
         </div>
