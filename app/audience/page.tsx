@@ -1,6 +1,9 @@
+// app/audience/page.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";
+
 import { motion } from "framer-motion";
 
 import { db } from "../../lib/firebase";
@@ -8,6 +11,7 @@ import { db } from "../../lib/firebase";
 import {
   ref,
   onValue,
+  update,
 } from "firebase/database";
 
 const wheelOptions = [
@@ -41,15 +45,15 @@ export default function AudiencePage() {
     round: 1,
 
     winner: "",
+
+    showChaosWheel: false,
+
+    chaosResult: "",
   });
 
   const [showIntro, setShowIntro] = useState(true);
 
-  const [showWheel, setShowWheel] = useState(false);
-
   const [rotation, setRotation] = useState(0);
-
-  const [selected, setSelected] = useState("");
 
   const [spinning, setSpinning] = useState(false);
 
@@ -73,18 +77,13 @@ export default function AudiencePage() {
 
       if (data) {
         setGameState(data);
-
-        if (data.showChaosWheel) {
-          setShowWheel(true);
-        }
-
       }
 
     });
 
   }, []);
 
-  const spinWheel = () => {
+  const spinWheel = async () => {
 
     if (spinning) return;
 
@@ -104,9 +103,11 @@ export default function AudiencePage() {
 
     setRotation(stopRotation);
 
-    setTimeout(() => {
+    setTimeout(async () => {
 
-      setSelected(chosen);
+      await update(ref(db, "game"), {
+        chaosResult: chosen,
+      });
 
       setSpinning(false);
 
@@ -118,7 +119,7 @@ export default function AudiencePage() {
 
     return (
 
-      <div className="min-h-screen bg-black flex items-center justify-center overflow-hidden relative">
+      <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
 
         <video
           autoPlay
@@ -137,7 +138,7 @@ export default function AudiencePage() {
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ duration: 1 }}
-          className="text-yellow-400 text-9xl font-black z-10 drop-shadow-[0_0_30px_gold]"
+          className="text-yellow-400 text-9xl font-black z-10"
         >
           CRACK IT!
         </motion.h1>
@@ -150,9 +151,7 @@ export default function AudiencePage() {
 
   return (
 
-    <div className="min-h-screen bg-black text-white overflow-hidden relative">
-
-      {/* VIDEO */}
+    <div className="min-h-screen bg-black text-white relative overflow-hidden">
 
       <video
         autoPlay
@@ -160,73 +159,24 @@ export default function AudiencePage() {
         loop
         playsInline
         preload="auto"
-        className="fixed inset-0 w-full h-full object-cover z-0 opacity-30"
+        className="fixed inset-0 w-full h-full object-cover opacity-30 z-0"
       >
         <source src="/videos/background.mp4" type="video/mp4" />
       </video>
 
       <div className="fixed inset-0 bg-black/50 z-0" />
 
-      {/* MAIN */}
-
       <div className="relative z-10 p-10">
 
-        {/* ROUND */}
+        <h1 className="text-center text-yellow-400 text-9xl font-black mb-10">
+          CRACK IT!
+        </h1>
 
-        <div className="flex justify-center">
-
-          <motion.div
-            animate={{
-              scale: [1, 1.08, 1],
-            }}
-            transition={{
-              repeat: Infinity,
-              duration: 2,
-            }}
-            className="bg-purple-600 px-10 py-4 rounded-3xl text-5xl font-black"
-          >
-            ROUND {gameState.round}
-          </motion.div>
-
+        <div className="bg-yellow-400 text-black text-center text-5xl font-black p-10 rounded-3xl">
+          {gameState.question}
         </div>
 
-        {/* TITLE */}
-
-        <motion.h1
-          animate={{
-            scale: [1, 1.03, 1],
-          }}
-          transition={{
-            repeat: Infinity,
-            duration: 2,
-          }}
-          className="text-center text-yellow-400 text-9xl font-black mt-10"
-        >
-          CRACK IT!
-        </motion.h1>
-
-        {/* QUESTION */}
-
-        <motion.div
-          key={gameState.question}
-          initial={{
-            opacity: 0,
-            scale: 0.8,
-          }}
-          animate={{
-            opacity: 1,
-            scale: 1,
-          }}
-          className="bg-yellow-400 text-black text-center text-5xl font-black p-10 rounded-3xl mt-10 shadow-2xl"
-        >
-          {gameState.question}
-        </motion.div>
-
-        {/* TEAMS */}
-
         <div className="flex justify-center gap-10 flex-wrap mt-14">
-
-          {/* TEAM CARD COMPONENTS */}
 
           {[
             {
@@ -234,35 +184,24 @@ export default function AudiencePage() {
               score: gameState.teamA,
               avatar: gameState.teamAAvatar,
               color: "bg-blue-600",
-              glow: "shadow-[0_0_40px_#3b82f6]",
             },
             {
               name: gameState.teamBName,
               score: gameState.teamB,
               avatar: gameState.teamBAvatar,
               color: "bg-pink-600",
-              glow: "shadow-[0_0_40px_#ec4899]",
             },
             {
               name: gameState.teamCName,
               score: gameState.teamC,
               avatar: gameState.teamCAvatar,
               color: "bg-green-600",
-              glow: "shadow-[0_0_40px_#22c55e]",
             },
-          ].map((team, index) => (
+          ].map((team) => (
 
-            <motion.div
+            <div
               key={team.name}
-              animate={{
-                y: [0, -10, 0],
-              }}
-              transition={{
-                repeat: Infinity,
-                duration: 3,
-                delay: index * 0.3,
-              }}
-              className={`w-[320px] h-[430px] ${team.color} ${team.glow} rounded-3xl p-8 flex flex-col items-center justify-between`}
+              className={`w-[320px] h-[430px] rounded-3xl p-8 ${team.color} flex flex-col items-center justify-between`}
             >
 
               <div className="text-8xl">
@@ -273,16 +212,18 @@ export default function AudiencePage() {
                 {team.name}
               </div>
 
-              <motion.div
-                key={team.score}
-                initial={{ scale: 1.5 }}
-                animate={{ scale: 1 }}
-                className="flex items-center justify-center text-[120px] leading-none font-black w-full h-[180px]"
-              >
-                {team.score}
-              </motion.div>
+              <div className="flex items-center justify-center w-full h-[180px] overflow-hidden">
+                <motion.div
+                  key={team.score}
+                  initial={{ scale: 1.5 }}
+                  animate={{ scale: 1 }}
+                  className="text-[120px] leading-none font-black text-center"
+                >
+                  {team.score}
+                </motion.div>
+              </div>
 
-            </motion.div>
+            </div>
 
           ))}
 
@@ -290,30 +231,17 @@ export default function AudiencePage() {
 
       </div>
 
-      {/* CHAOS WHEEL POPUP */}
+      {/* CHAOS POPUP */}
 
-      {showWheel && (
+      {gameState.showChaosWheel && (
 
         <div className="fixed inset-0 bg-black/90 z-50 flex flex-col items-center justify-center">
 
-          <motion.h1
-            animate={{
-              scale: [1, 1.08, 1],
-            }}
-            transition={{
-              repeat: Infinity,
-              duration: 1,
-            }}
-            className="text-yellow-400 text-8xl font-black mb-10"
-          >
+          <h1 className="text-yellow-400 text-8xl font-black mb-10">
             CHAOS ROUND
-          </motion.h1>
-
-          {/* POINTER */}
+          </h1>
 
           <div className="w-0 h-0 border-l-[40px] border-r-[40px] border-b-[80px] border-l-transparent border-r-transparent border-b-yellow-400 z-20 mb-[-20px]" />
-
-          {/* WHEEL */}
 
           <motion.div
             animate={{
@@ -323,7 +251,7 @@ export default function AudiencePage() {
               duration: 5,
               ease: "easeOut",
             }}
-            className="relative w-[700px] h-[700px] rounded-full overflow-hidden border-[16px] border-blue-900 shadow-[0_0_80px_#60a5fa]"
+            className="relative w-[700px] h-[700px] rounded-full overflow-hidden border-[16px] border-blue-900"
           >
 
             {wheelOptions.map((option, index) => {
@@ -370,8 +298,6 @@ export default function AudiencePage() {
 
             })}
 
-            {/* SPIN BUTTON */}
-
             <div className="absolute inset-0 flex items-center justify-center">
 
               <button
@@ -385,9 +311,7 @@ export default function AudiencePage() {
 
           </motion.div>
 
-          {/* RESULT */}
-
-          {selected && (
+          {gameState.chaosResult && (
 
             <motion.div
               initial={{
@@ -406,7 +330,7 @@ export default function AudiencePage() {
               </div>
 
               <div className="text-yellow-400 text-6xl font-black text-center mt-4">
-                {selected}
+                {gameState.chaosResult}
               </div>
 
             </motion.div>

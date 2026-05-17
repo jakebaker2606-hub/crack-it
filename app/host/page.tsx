@@ -1,31 +1,42 @@
+// app/host/page.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";
 
+import { db } from "../../lib/firebase";
+
 import {
   ref,
-  set,
-  get,
+  update,
   onValue,
-  goOnline
 } from "firebase/database";
 
-import { db } from "../../lib/firebase";
-import { questions } from "../../lib/questions";
-import { wheelOptions } from "../../lib/wheel";
 import { playSound, stopSound } from "../../lib/sounds";
-
-import { motion } from "framer-motion";
 
 export default function HostPage() {
 
-  const [gameState, setGameState] = useState<any>({});
+  const [gameState, setGameState] = useState<any>({
+    teamA: 0,
+    teamB: 0,
+    teamC: 0,
+
+    round: 1,
+
+    question: "Waiting for next question...",
+
+    winner: "",
+
+    showChaosWheel: false,
+
+    chaosResult: "",
+  });
 
   useEffect(() => {
-goOnline(db);
+
     const gameRef = ref(db, "game");
 
-    const unsubscribe = onValue(gameRef, (snapshot) => {
+    onValue(gameRef, (snapshot) => {
 
       const data = snapshot.val();
 
@@ -35,95 +46,22 @@ goOnline(db);
 
     });
 
-    return () => unsubscribe();
-
   }, []);
 
   const updateGame = async (updates: any) => {
 
-    const gameRef = ref(db, "game");
+    await update(ref(db, "game"), updates);
 
-    const snapshot = await get(gameRef);
-
-    const currentData = snapshot.val() || {
-
-      teamA: 0,
-      teamB: 0,
-      teamC: 0,
-
-      teamAName: "Team A",
-      teamBName: "Team B",
-      teamCName: "Team C",
-
-      teamAAvatar: "🦊",
-      teamBAvatar: "🐼",
-      teamCAvatar: "🐸",
-
-      round: 1,
-
-      question: "Waiting for next question...",
-      answer: "",
-
-      revealAnswer: false,
-
-      category: "",
-
-      chaos: "",
-
-      timer: 0,
-
-      wheelResult: "",
-      showWheel: false,
-
-      winner: "",
-
-      showIntro: false,
-      showGameOver: false,
-
-      hypeMessage: "",
-
-      suddenDeath: false,
-    };
-
-    console.log("UPDATING FIREBASE");
-
-await set(gameRef, {
-      ...currentData,
-      ...updates,
-    });
   };
-
-  useEffect(() => {
-
-    if (!gameState?.timer || gameState.timer <= 0) return;
-
-    const interval = setInterval(async () => {
-
-      const snapshot = await get(ref(db, "game"));
-
-      const current = snapshot.val();
-
-      if (current.timer > 0) {
-
-        await updateGame({
-          timer: current.timer - 1,
-        });
-
-      }
-
-    }, 1000);
-
-    return () => clearInterval(interval);
-
-  }, [gameState?.timer]);
 
   const addTeamA = async () => {
 
     playSound("correct.mp3");
 
     await updateGame({
-      teamA: (gameState.teamA || 0) + 500,
+      teamA: gameState.teamA + 500,
     });
+
   };
 
   const addTeamB = async () => {
@@ -131,174 +69,78 @@ await set(gameRef, {
     playSound("correct.mp3");
 
     await updateGame({
-      teamB: (gameState.teamB || 0) + 500,
+      teamB: gameState.teamB + 500,
     });
+
   };
 
   const addTeamC = async () => {
 
-  playSound("correct.mp3");
-
-  await updateGame({
-    teamC: (gameState.teamC || 0) + 500,
-  });
-
-};
-
-const minusTeamA = async () => {
-
-  playSound("wrong.mp3");
-
-  await updateGame({
-    teamA: Math.max(0, (gameState.teamA || 0) - 500),
-  });
-
-};
-
-const minusTeamB = async () => {
-
-  playSound("wrong.mp3");
-
-  await updateGame({
-    teamB: Math.max(0, (gameState.teamB || 0) - 500),
-  });
-
-};
-
-const minusTeamC = async () => {
-
-  playSound("wrong.mp3");
-
-  await updateGame({
-    teamC: Math.max(0, (gameState.teamC || 0) - 500),
-  });
-
-};
-
-  const randomQuestion = async () => {
-
-    const random =
-      questions[Math.floor(Math.random() * questions.length)];
+    playSound("correct.mp3");
 
     await updateGame({
-      category: random.category,
-      question: random.question,
-      answer: random.answer,
-      revealAnswer: false,
+      teamC: gameState.teamC + 500,
     });
-  };
-
-  const spinWheel = async () => {
-
-    playSound("chaos.mp3");
-
-    const result =
-      wheelOptions[
-        Math.floor(Math.random() * wheelOptions.length)
-      ];
-
-    await updateGame({
-      showWheel: true,
-      wheelResult: result,
-    });
-
-    setTimeout(async () => {
-
-      await updateGame({
-        showWheel: false,
-      });
-
-    }, 4000);
 
   };
 
-  const resetGame = async () => {
+  const minusTeamA = async () => {
 
-    await set(ref(db, "game"), {
+    playSound("wrong.mp3");
 
-      teamA: 0,
-      teamB: 0,
-      teamC: 0,
-
-      teamAName: "Team A",
-      teamBName: "Team B",
-      teamCName: "Team C",
-
-      teamAAvatar: "🦊",
-      teamBAvatar: "🐼",
-      teamCAvatar: "🐸",
-
-      round: 1,
-
-      question: "Waiting for next question...",
-      answer: "",
-
-      revealAnswer: false,
-
-      category: "",
-
-      chaos: "",
-
-      timer: 0,
-
-      wheelResult: "",
-      showWheel: false,
-
-      winner: "",
-
-      showIntro: false,
-      showGameOver: false,
-
-      hypeMessage: "",
-
-      suddenDeath: false,
+    await updateGame({
+      teamA: Math.max(0, gameState.teamA - 500),
     });
+
+  };
+
+  const minusTeamB = async () => {
+
+    playSound("wrong.mp3");
+
+    await updateGame({
+      teamB: Math.max(0, gameState.teamB - 500),
+    });
+
+  };
+
+  const minusTeamC = async () => {
+
+    playSound("wrong.mp3");
+
+    await updateGame({
+      teamC: Math.max(0, gameState.teamC - 500),
+    });
+
+  };
+
+  const openChaosRound = async () => {
+
+    await updateGame({
+      showChaosWheel: true,
+      chaosResult: "",
+    });
+
+  };
+
+  const closeChaosRound = async () => {
+
+    await updateGame({
+      showChaosWheel: false,
+      chaosResult: "",
+    });
+
   };
 
   return (
-    <main className="min-h-screen bg-black text-white p-10">
 
-      <motion.h1
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        className="text-7xl font-black text-center text-yellow-400"
-      >
-        CRACK IT HOST
-      </motion.h1>
+    <div className="min-h-screen bg-black text-white p-10">
 
-      <div className="grid grid-cols-2 gap-6 mt-10">
+      <h1 className="text-7xl font-black text-center text-yellow-400 mb-10">
+        HOST CONTROL PANEL
+      </h1>
 
-        <button
-          onClick={randomQuestion}
-          className="bg-yellow-400 text-black p-10 rounded-3xl text-3xl font-black col-span-2"
-        >
-          SHOW QUESTION
-        </button>
-
-        <button
-          onClick={() => {
-            playSound("timer.mp3");
-            updateGame({ timer: 30 });
-          }}
-          className="bg-green-600 p-10 rounded-3xl text-3xl font-black"
-        >
-          START TIMER
-        </button>
-
-        <button
-  onClick={() => {
-
-    stopSound();
-
-    updateGame({
-      timer: 0,
-    });
-
-  }}
-  className="bg-gray-600 p-10 rounded-3xl text-3xl font-black"
->
-  STOP TIMER
-</button>
+      <div className="grid grid-cols-2 gap-8">
 
         <button
           onClick={addTeamA}
@@ -308,70 +150,38 @@ const minusTeamC = async () => {
         </button>
 
         <button
+          onClick={minusTeamA}
+          className="bg-red-700 p-10 rounded-3xl text-3xl font-black"
+        >
+          TEAM A -500
+        </button>
+
+        <button
           onClick={addTeamB}
           className="bg-pink-600 p-10 rounded-3xl text-3xl font-black"
         >
           TEAM B +500
         </button>
-        <button
-  onClick={addTeamC}
-  className="bg-green-600 p-10 rounded-3xl text-3xl font-black"
->
-  TEAM C +500
-</button>
-
-<button
-  onClick={minusTeamA}
-  className="bg-red-700 p-10 rounded-3xl text-3xl font-black"
->
-  TEAM A -500
-</button>
-
-<button
-  onClick={minusTeamB}
-  className="bg-red-700 p-10 rounded-3xl text-3xl font-black"
->
-  TEAM B -500
-</button>
-
-<button
-  onClick={minusTeamC}
-  className="bg-red-700 p-10 rounded-3xl text-3xl font-black"
->
-  TEAM C -500
-</button>
 
         <button
-          onClick={() =>
-            updateGame({
-              revealAnswer: true,
-            })
-          }
-          className="bg-green-400 text-black p-10 rounded-3xl text-3xl font-black col-span-2"
+          onClick={minusTeamB}
+          className="bg-red-700 p-10 rounded-3xl text-3xl font-black"
         >
-          REVEAL ANSWER
+          TEAM B -500
         </button>
 
         <button
-          onClick={spinWheel}
-          className="bg-purple-600 p-10 rounded-3xl text-3xl font-black col-span-2"
+          onClick={addTeamC}
+          className="bg-green-600 p-10 rounded-3xl text-3xl font-black"
         >
-          SPIN WHEEL
+          TEAM C +500
         </button>
 
         <button
-          onClick={() => {
-
-            playSound("chaos.mp3");
-
-            updateGame({
-              round: 99,
-            });
-
-          }}
-          className="bg-red-600 p-10 rounded-3xl text-3xl font-black col-span-2"
+          onClick={minusTeamC}
+          className="bg-red-700 p-10 rounded-3xl text-3xl font-black"
         >
-          BONUS ROUND
+          TEAM C -500
         </button>
 
         <button
@@ -380,7 +190,7 @@ const minusTeamC = async () => {
               winner: "TEAM A",
             })
           }
-          className="bg-blue-700 p-10 rounded-3xl text-3xl font-black"
+          className="bg-blue-800 p-10 rounded-3xl text-3xl font-black"
         >
           TEAM A WINS
         </button>
@@ -391,74 +201,66 @@ const minusTeamC = async () => {
               winner: "TEAM B",
             })
           }
-          className="bg-pink-700 p-10 rounded-3xl text-3xl font-black"
+          className="bg-pink-800 p-10 rounded-3xl text-3xl font-black"
         >
           TEAM B WINS
         </button>
-<button
-  onClick={() =>
-    updateGame({
-      winner: "TEAM C",
-    })
-  }
-  className="bg-green-700 p-10 rounded-3xl text-3xl font-black"
->
-  TEAM C WINS
-</button>
+
+        <button
+          onClick={() =>
+            updateGame({
+              winner: "TEAM C",
+            })
+          }
+          className="bg-green-800 p-10 rounded-3xl text-3xl font-black"
+        >
+          TEAM C WINS
+        </button>
+
+        <button
+          onClick={() =>
+            updateGame({
+              winner: "",
+            })
+          }
+          className="bg-gray-700 p-10 rounded-3xl text-3xl font-black"
+        >
+          CLEAR WINNER
+        </button>
+
+        <button
+          onClick={openChaosRound}
+          className="bg-yellow-500 text-black p-10 rounded-3xl text-3xl font-black"
+        >
+          OPEN CHAOS ROUND
+        </button>
+
+        <button
+          onClick={closeChaosRound}
+          className="bg-gray-700 p-10 rounded-3xl text-3xl font-black"
+        >
+          CLOSE CHAOS ROUND
+        </button>
+
         <button
           onClick={() => {
 
-            playSound("intro.mp3");
+            stopSound();
 
             updateGame({
-              showIntro: true,
+              timer: 0,
             });
 
-            setTimeout(() => {
-
-              updateGame({
-                showIntro: false,
-              });
-
-            }, 5000);
-
           }}
-          className="bg-yellow-500 text-black p-10 rounded-3xl text-3xl font-black col-span-2"
+          className="bg-red-900 p-10 rounded-3xl text-3xl font-black"
         >
-          PLAY INTRO
-        </button>
-
-        <button
-          onClick={() =>
-            updateGame({
-              suddenDeath: true,
-            })
-          }
-          className="bg-red-800 p-10 rounded-3xl text-3xl font-black col-span-2"
-        >
-          SUDDEN DEATH
-        </button>
-
-        <button
-          onClick={() =>
-            updateGame({
-              showGameOver: true,
-            })
-          }
-          className="bg-black border-4 border-red-600 p-10 rounded-3xl text-3xl font-black col-span-2"
-        >
-          END GAME
-        </button>
-
-        <button
-          onClick={resetGame}
-          className="bg-red-700 p-10 rounded-3xl text-3xl font-black col-span-2"
-        >
-          RESET GAME
+          STOP TIMER
         </button>
 
       </div>
 
-    </main>
+    </div>
+
   );
+
 }
