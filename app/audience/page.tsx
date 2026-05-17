@@ -6,7 +6,7 @@ import { db } from "../../lib/firebase";
 
 import {
   ref,
- onValue,
+  onValue,
   update,
 } from "firebase/database";
 
@@ -23,11 +23,7 @@ const wheelOptions = [
 
 export default function AudiencePage() {
 
-  const [game, setGame] = useState<any>({
-    teamA: 0,
-    teamB: 0,
-    teamC: 0,
-  });
+  const [game, setGame] = useState<any>({});
 
   const [rotation, setRotation] = useState(0);
 
@@ -35,9 +31,21 @@ export default function AudiencePage() {
 
   const timerAudio = useRef<HTMLAudioElement | null>(null);
 
+  const winnerAudio = useRef<HTMLAudioElement | null>(null);
+
+  const introAudio = useRef<HTMLAudioElement | null>(null);
+
+  const chaosAudio = useRef<HTMLAudioElement | null>(null);
+
   useEffect(() => {
 
     timerAudio.current = new Audio("/sounds/timer.mp3");
+
+    winnerAudio.current = new Audio("/sounds/winner.mp3");
+
+    introAudio.current = new Audio("/sounds/intro.mp3");
+
+    chaosAudio.current = new Audio("/sounds/chaos.mp3");
 
     timerAudio.current.loop = true;
 
@@ -55,6 +63,8 @@ export default function AudiencePage() {
 
       setGame(data);
 
+      /* TIMER AUDIO */
+
       if (data.timerRunning) {
 
         try {
@@ -71,11 +81,37 @@ export default function AudiencePage() {
 
       }
 
+      /* INTRO AUDIO */
+
+      if (data.showIntro) {
+
+        try {
+          await introAudio.current?.play();
+        } catch {}
+
+      }
+
+      /* WINNER AUDIO */
+
+      if (data.winner) {
+
+        try {
+          await winnerAudio.current?.play();
+        } catch {}
+
+      }
+
+      /* CHAOS */
+
       if (
         data.showChaosWheel &&
         !data.chaosResult &&
         !spinning
       ) {
+
+        try {
+          await chaosAudio.current?.play();
+        } catch {}
 
         spinWheel();
 
@@ -146,6 +182,8 @@ export default function AudiencePage() {
 
   const formatScore = (score: number) => {
 
+    if (!score) return 0;
+
     if (score >= 1000000) {
       return `${(score / 1000000).toFixed(1)}M`;
     }
@@ -178,236 +216,105 @@ export default function AudiencePage() {
 
   return (
 
-    <div className="min-h-screen bg-black text-white p-10 relative overflow-hidden">
+    <div className="min-h-screen bg-black text-white relative overflow-hidden">
 
-      {/* INTRO */}
+      {/* VIDEO BACKGROUND */}
 
-      {game.showIntro && (
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        className="fixed inset-0 w-full h-full object-cover opacity-30"
+      >
+        <source
+          src="/videos/background.mp4"
+          type="video/mp4"
+        />
+      </video>
 
-        <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
+      <div className="fixed inset-0 bg-black/60" />
 
-          <div className="text-center">
+      {/* MAIN */}
 
-            <div className="text-yellow-400 text-9xl font-black animate-pulse">
-              CRACK IT!
+      <div className="relative z-10 p-10">
+
+        <h1 className="text-yellow-400 text-8xl font-black text-center tracking-widest">
+          CRACK IT!
+        </h1>
+
+        {/* TIMER */}
+
+        {game.showTimer && (
+
+          <div className="flex justify-center mt-8">
+
+            <div className="bg-red-600 text-white text-7xl font-black px-20 py-10 rounded-3xl animate-pulse shadow-2xl">
+              {game.timer}
             </div>
 
-            <div className="text-white text-4xl mt-10">
-              THE ULTIMATE QUIZ SHOW
+          </div>
+
+        )}
+
+        {/* QUESTION */}
+
+        <div className="bg-yellow-400 text-black text-center text-5xl font-black p-10 rounded-3xl mt-10 shadow-2xl">
+          {game.question || "Waiting for next question..."}
+        </div>
+
+        {/* ANSWER */}
+
+        {game.showAnswer && (
+
+          <div className="bg-green-500 text-white text-center text-5xl font-black p-10 rounded-3xl mt-6 shadow-2xl">
+            ANSWER: {game.answer}
+          </div>
+
+        )}
+
+        {/* TEAMS */}
+
+        <div className="flex justify-center gap-10 mt-16 flex-wrap">
+
+          {[
+            {
+              name: "TEAM A",
+              score: game.teamA,
+              color: "bg-blue-600",
+            },
+            {
+              name: "TEAM B",
+              score: game.teamB,
+              color: "bg-pink-600",
+            },
+            {
+              name: "TEAM C",
+              score: game.teamC,
+              color: "bg-green-600",
+            },
+          ].map((team) => (
+
+            <div
+              key={team.name}
+              className={`${team.color} w-[300px] h-[400px] rounded-3xl flex flex-col items-center justify-center shadow-2xl border-4 border-white`}
+            >
+
+              <div className="text-5xl font-black">
+                {team.name}
+              </div>
+
+              <div className="text-8xl font-black mt-10">
+                {formatScore(team.score)}
+              </div>
+
             </div>
 
-          </div>
-
-        </div>
-
-      )}
-
-      {/* END GAME */}
-
-      {game.showEndGame && (
-
-        <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
-
-          <div className="text-center">
-
-            <div className="text-red-500 text-9xl font-black">
-              GAME OVER
-            </div>
-
-          </div>
-
-        </div>
-
-      )}
-
-      <h1 className="text-yellow-400 text-8xl font-black text-center">
-        CRACK IT!
-      </h1>
-
-      {/* TIMER */}
-
-      {game.showTimer && (
-
-        <div className="flex justify-center mt-8">
-
-          <div className="bg-red-600 text-white text-7xl font-black px-16 py-8 rounded-3xl">
-            {game.timer}
-          </div>
-
-        </div>
-
-      )}
-
-      {/* QUESTION */}
-
-      <div className="bg-yellow-400 text-black text-center text-5xl font-black p-10 rounded-3xl mt-10">
-        {game.question || "Waiting for next question..."}
-      </div>
-
-      {/* ANSWER */}
-
-      {game.showAnswer && (
-
-        <div className="bg-green-500 text-white text-center text-5xl font-black p-10 rounded-3xl mt-6">
-          ANSWER: {game.answer}
-        </div>
-
-      )}
-
-      {/* TEAMS */}
-
-      <div className="flex justify-center gap-10 mt-16 flex-wrap">
-
-        <div className="bg-blue-600 w-[300px] h-[400px] rounded-3xl flex flex-col items-center justify-center">
-
-          <div className="text-5xl font-black">
-            TEAM A
-          </div>
-
-          <div className="text-8xl font-black mt-10">
-            {formatScore(game.teamA || 0)}
-          </div>
-
-        </div>
-
-        <div className="bg-pink-600 w-[300px] h-[400px] rounded-3xl flex flex-col items-center justify-center">
-
-          <div className="text-5xl font-black">
-            TEAM B
-          </div>
-
-          <div className="text-8xl font-black mt-10">
-            {formatScore(game.teamB || 0)}
-          </div>
-
-        </div>
-
-        <div className="bg-green-600 w-[300px] h-[400px] rounded-3xl flex flex-col items-center justify-center">
-
-          <div className="text-5xl font-black">
-            TEAM C
-          </div>
-
-          <div className="text-8xl font-black mt-10">
-            {formatScore(game.teamC || 0)}
-          </div>
+          ))}
 
         </div>
 
       </div>
-
-      {/* LEADERBOARD */}
-
-      {game.showLeaderboard && (
-
-        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50">
-
-          <div className="bg-white text-black p-16 rounded-3xl w-[700px]">
-
-            <h2 className="text-6xl font-black text-center mb-10">
-              LEADERBOARD
-            </h2>
-
-            <div className="flex flex-col gap-5">
-
-              {leaderboard.map((team, index) => (
-
-                <div
-                  key={team.name}
-                  className={`${team.color} text-white p-6 rounded-2xl flex justify-between text-4xl font-black`}
-                >
-
-                  <div>
-                    #{index + 1} {team.name}
-                  </div>
-
-                  <div>
-                    {formatScore(team.score)}
-                  </div>
-
-                </div>
-
-              ))}
-
-            </div>
-
-          </div>
-
-        </div>
-
-      )}
-
-      {/* CHAOS WHEEL */}
-
-      {game.showChaosWheel && (
-
-        <div className="fixed inset-0 bg-black/80 flex flex-col items-center justify-center z-50">
-
-          <div
-            style={{
-              transform: `rotate(${rotation}deg)`,
-              transition: "transform 5s ease-out",
-            }}
-            className="w-[500px] h-[500px] rounded-full border-[20px] border-white relative overflow-hidden"
-          >
-
-            {wheelOptions.map((option, index) => {
-
-              const angle =
-                (360 / wheelOptions.length) * index;
-
-              return (
-
-                <div
-                  key={option}
-                  style={{
-                    transform: `rotate(${angle}deg)`,
-                    transformOrigin: "bottom center",
-                  }}
-                  className="absolute w-1/2 h-1/2 left-1/2 top-1/2 bg-purple-600 border border-black flex items-center justify-center text-center text-xl font-black"
-                >
-                  {option}
-                </div>
-
-              );
-
-            })}
-
-          </div>
-
-          {game.chaosResult && (
-
-            <div className="bg-yellow-400 text-black text-6xl font-black px-12 py-6 rounded-3xl mt-10">
-              {game.chaosResult}
-            </div>
-
-          )}
-
-        </div>
-
-      )}
-
-      {/* WINNER */}
-
-      {game.winner && (
-
-        <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-50">
-
-          <div className="text-center">
-
-            <div className="text-yellow-400 text-9xl font-black animate-pulse">
-              {game.winner}
-            </div>
-
-            <div className="text-white text-6xl mt-10">
-              ARE THE CHAMPIONS!
-            </div>
-
-          </div>
-
-        </div>
-
-      )}
 
     </div>
 
