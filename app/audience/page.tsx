@@ -26,6 +26,7 @@ const wheelOptions = [
 export default function AudiencePage() {
 
   const [gameState, setGameState] = useState<any>({
+    showLeaderboard: false,
     teamA: 0,
     teamB: 0,
     teamC: 0,
@@ -486,7 +487,75 @@ export default function AudiencePage() {
         </div>
 
       )}
+{/* LEADERBOARD */}
 
+{gameState.showLeaderboard && (
+
+  <div className="fixed inset-0 bg-black/95 z-[90] flex flex-col items-center justify-center">
+
+    <h1 className="text-yellow-400 text-8xl font-black mb-16">
+      LEADERBOARD
+    </h1>
+
+    <div className="flex gap-10">
+
+      {[
+        {
+          name: "TEAM A",
+          score: gameState.teamA,
+          color: "bg-blue-600",
+        },
+        {
+          name: "TEAM B",
+          score: gameState.teamB,
+          color: "bg-pink-600",
+        },
+        {
+          name: "TEAM C",
+          score: gameState.teamC,
+          color: "bg-green-600",
+        },
+      ]
+        .sort((a, b) => b.score - a.score)
+        .map((team, index) => (
+
+          <motion.div
+            key={team.name}
+            initial={{
+              y: 200,
+              opacity: 0,
+            }}
+            animate={{
+              y: 0,
+              opacity: 1,
+            }}
+            transition={{
+              delay: index * 0.3,
+            }}
+            className={`${team.color} w-[320px] h-[420px] rounded-3xl flex flex-col items-center justify-center`}
+          >
+
+            <div className="text-7xl font-black mb-6">
+              #{index + 1}
+            </div>
+
+            <div className="text-5xl font-black">
+              {team.name}
+            </div>
+
+            <div className="text-8xl font-black mt-10">
+              {team.score}
+            </div>
+
+          </motion.div>
+
+        ))}
+
+    </div>
+
+  </div>
+
+)}
       {/* WINNER */}
 
       {gameState.winner && (
