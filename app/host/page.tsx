@@ -77,6 +77,17 @@ export default function HostPage() {
           SHOW QUESTION
         </button>
 
+        <button
+          onClick={() =>
+            updateGame({
+              question: "",
+            })
+          }
+          className="bg-yellow-800 p-6 rounded-2xl text-3xl font-black"
+        >
+          REMOVE QUESTION
+        </button>
+
         <input
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
@@ -94,6 +105,18 @@ export default function HostPage() {
           className="bg-green-600 p-6 rounded-2xl text-3xl font-black"
         >
           SHOW ANSWER
+        </button>
+
+        <button
+          onClick={() =>
+            updateGame({
+              answer: "",
+              showAnswer: false,
+            })
+          }
+          className="bg-green-900 p-6 rounded-2xl text-3xl font-black"
+        >
+          REMOVE ANSWER
         </button>
 
       </div>
@@ -138,9 +161,9 @@ export default function HostPage() {
 
       </div>
 
-      {/* TEAM SCORES */}
+      {/* TEAM CONTROLS */}
 
-      <div className="grid grid-cols-3 gap-5 mb-10">
+      <div className="grid grid-cols-2 gap-5 mb-10">
 
         {/* TEAM A */}
 
@@ -220,6 +243,8 @@ export default function HostPage() {
 
       <div className="grid grid-cols-2 gap-5">
 
+        {/* CHAOS ROUND */}
+
         <button
           onClick={() =>
             updateGame({
@@ -235,6 +260,20 @@ export default function HostPage() {
         <button
           onClick={() =>
             updateGame({
+              showChaosWheel: false,
+              chaosResult: "",
+            })
+          }
+          className="bg-yellow-800 p-8 rounded-3xl text-3xl font-black"
+        >
+          CLOSE CHAOS ROUND
+        </button>
+
+        {/* INTRO */}
+
+        <button
+          onClick={() =>
+            updateGame({
               showIntro: true,
             })
           }
@@ -242,76 +281,88 @@ export default function HostPage() {
         >
           START INTRO
         </button>
-<button
-  onClick={() =>
-    updateGame({
-      showLeaderboard: true,
-    })
-  }
-  className="bg-orange-500 p-8 rounded-3xl text-3xl font-black"
->
-  SHOW LEADERBOARD
-</button>
-<button
-  onClick={() => {
 
-    const scores = [
-      {
-        name: "TEAM A",
-        score: gameState.teamA,
-      },
-      {
-        name: "TEAM B",
-        score: gameState.teamB,
-      },
-      {
-        name: "TEAM C",
-        score: gameState.teamC,
-      },
-    ];
-
-    const winner = scores.reduce((a, b) =>
-      a.score > b.score ? a : b
-    );
-
-    updateGame({
-      winner: winner.name,
-    });
-
-  }}
-  className="bg-yellow-400 text-black p-8 rounded-3xl text-3xl font-black"
->
-  REVEAL WINNER
-</button>
         <button
           onClick={() =>
             updateGame({
-              teamA: 0,
-              teamB: 0,
-              teamC: 0,
-
-              question: "Waiting for next question...",
-              answer: "",
-
-              showAnswer: false,
-
-              winner: "",
-
-              timer: 30,
-
-              timerRunning: false,
-
-              showTimer: false,
-showLeaderboard: false,
-              showChaosWheel: false,
-endGame: false,
-              chaosResult: "",
+              showIntro: false,
             })
           }
-          className="bg-red-700 p-8 rounded-3xl text-3xl font-black"
+          className="bg-purple-900 p-8 rounded-3xl text-3xl font-black"
         >
-          RESET GAME
+          STOP INTRO
         </button>
+
+        {/* LEADERBOARD */}
+
+        <button
+          onClick={() =>
+            updateGame({
+              showLeaderboard: true,
+            })
+          }
+          className="bg-orange-500 p-8 rounded-3xl text-3xl font-black"
+        >
+          SHOW LEADERBOARD
+        </button>
+
+        <button
+          onClick={() =>
+            updateGame({
+              showLeaderboard: false,
+            })
+          }
+          className="bg-orange-900 p-8 rounded-3xl text-3xl font-black"
+        >
+          HIDE LEADERBOARD
+        </button>
+
+        {/* WINNER */}
+
+        <button
+          onClick={() => {
+
+            const scores = [
+              {
+                name: "TEAM A",
+                score: gameState.teamA,
+              },
+              {
+                name: "TEAM B",
+                score: gameState.teamB,
+              },
+              {
+                name: "TEAM C",
+                score: gameState.teamC,
+              },
+            ];
+
+            const winner = scores.reduce((a, b) =>
+              a.score > b.score ? a : b
+            );
+
+            updateGame({
+              winner: winner.name,
+            });
+
+          }}
+          className="bg-green-500 p-8 rounded-3xl text-3xl font-black"
+        >
+          REVEAL WINNER
+        </button>
+
+        <button
+          onClick={() =>
+            updateGame({
+              winner: "",
+            })
+          }
+          className="bg-green-900 p-8 rounded-3xl text-3xl font-black"
+        >
+          REMOVE WINNER
+        </button>
+
+        {/* END GAME */}
 
         <button
           onClick={() =>
@@ -322,6 +373,54 @@ endGame: false,
           className="bg-black border-4 border-red-600 p-8 rounded-3xl text-3xl font-black"
         >
           END GAME
+        </button>
+
+        <button
+          onClick={() =>
+            updateGame({
+              endGame: false,
+            })
+          }
+          className="bg-gray-700 p-8 rounded-3xl text-3xl font-black"
+        >
+          REMOVE END GAME
+        </button>
+
+        {/* RESET */}
+
+        <button
+          onClick={() =>
+            updateGame({
+
+              teamA: 0,
+              teamB: 0,
+              teamC: 0,
+
+              question: "",
+              answer: "",
+
+              showAnswer: false,
+
+              timer: 30,
+              timerRunning: false,
+              showTimer: false,
+
+              winner: "",
+
+              showLeaderboard: false,
+
+              showChaosWheel: false,
+              chaosResult: "",
+
+              showIntro: false,
+
+              endGame: false,
+
+            })
+          }
+          className="bg-red-800 p-8 rounded-3xl text-3xl font-black col-span-2"
+        >
+          RESET ENTIRE GAME
         </button>
 
       </div>
