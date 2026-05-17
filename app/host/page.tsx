@@ -74,18 +74,33 @@ export default function HostPage() {
         className="p-6 rounded-2xl text-black text-3xl"
       />
 
-      <button
-        onClick={() =>
-          updateGame({
-            question,
-            answer: "",
-            showAnswer: false,
-          })
-        }
-        className="bg-yellow-400 text-black p-6 rounded-2xl text-3xl font-black"
-      >
-        SHOW QUESTION
-      </button>
+      <div className="grid grid-cols-2 gap-5">
+
+        <button
+          onClick={() =>
+            updateGame({
+              question,
+              answer: "",
+              showAnswer: false,
+            })
+          }
+          className="bg-yellow-400 text-black p-6 rounded-2xl text-3xl font-black"
+        >
+          SHOW QUESTION
+        </button>
+
+        <button
+          onClick={() =>
+            updateGame({
+              question: "",
+            })
+          }
+          className="bg-yellow-700 p-6 rounded-2xl text-3xl font-black"
+        >
+          REMOVE QUESTION
+        </button>
+
+      </div>
 
       {/* ANSWERS */}
 
@@ -96,17 +111,33 @@ export default function HostPage() {
         className="p-6 rounded-2xl text-black text-3xl"
       />
 
-      <button
-        onClick={() =>
-          updateGame({
-            answer,
-            showAnswer: true,
-          })
-        }
-        className="bg-green-500 p-6 rounded-2xl text-3xl font-black"
-      >
-        SHOW ANSWER
-      </button>
+      <div className="grid grid-cols-2 gap-5">
+
+        <button
+          onClick={() =>
+            updateGame({
+              answer,
+              showAnswer: true,
+            })
+          }
+          className="bg-green-500 p-6 rounded-2xl text-3xl font-black"
+        >
+          SHOW ANSWER
+        </button>
+
+        <button
+          onClick={() =>
+            updateGame({
+              answer: "",
+              showAnswer: false,
+            })
+          }
+          className="bg-green-900 p-6 rounded-2xl text-3xl font-black"
+        >
+          REMOVE ANSWER
+        </button>
+
+      </div>
 
       {/* TIMER */}
 
@@ -152,91 +183,146 @@ export default function HostPage() {
 
       <div className="grid grid-cols-3 gap-5">
 
-        <div className="bg-blue-600 p-6 rounded-3xl flex flex-col gap-4">
+        {[
+          {
+            team: "teamA",
+            title: "TEAM A",
+            color: "bg-blue-600",
+          },
+          {
+            team: "teamB",
+            title: "TEAM B",
+            color: "bg-pink-600",
+          },
+          {
+            team: "teamC",
+            title: "TEAM C",
+            color: "bg-green-600",
+          },
+        ].map((team) => (
 
-          <h2 className="text-4xl font-black text-center">
-            TEAM A
-          </h2>
-
-          <button
-            onClick={() => updateScore("teamA", 500)}
-            className="bg-white text-black p-4 rounded-2xl text-2xl font-black"
+          <div
+            key={team.team}
+            className={`${team.color} p-6 rounded-3xl flex flex-col gap-4`}
           >
-            +500
-          </button>
 
-          <button
-            onClick={() => updateScore("teamA", -500)}
-            className="bg-black p-4 rounded-2xl text-2xl font-black"
-          >
-            -500
-          </button>
+            <h2 className="text-4xl font-black text-center">
+              {team.title}
+            </h2>
 
-        </div>
+            <button
+              onClick={() =>
+                updateScore(team.team, 500)
+              }
+              className="bg-white text-black p-4 rounded-2xl text-2xl font-black"
+            >
+              +500
+            </button>
 
-        <div className="bg-pink-600 p-6 rounded-3xl flex flex-col gap-4">
+            <button
+              onClick={() =>
+                updateScore(team.team, -500)
+              }
+              className="bg-black p-4 rounded-2xl text-2xl font-black"
+            >
+              -500
+            </button>
 
-          <h2 className="text-4xl font-black text-center">
-            TEAM B
-          </h2>
+          </div>
 
-          <button
-            onClick={() => updateScore("teamB", 500)}
-            className="bg-white text-black p-4 rounded-2xl text-2xl font-black"
-          >
-            +500
-          </button>
-
-          <button
-            onClick={() => updateScore("teamB", -500)}
-            className="bg-black p-4 rounded-2xl text-2xl font-black"
-          >
-            -500
-          </button>
-
-        </div>
-
-        <div className="bg-green-600 p-6 rounded-3xl flex flex-col gap-4">
-
-          <h2 className="text-4xl font-black text-center">
-            TEAM C
-          </h2>
-
-          <button
-            onClick={() => updateScore("teamC", 500)}
-            className="bg-white text-black p-4 rounded-2xl text-2xl font-black"
-          >
-            +500
-          </button>
-
-          <button
-            onClick={() => updateScore("teamC", -500)}
-            className="bg-black p-4 rounded-2xl text-2xl font-black"
-          >
-            -500
-          </button>
-
-        </div>
+        ))}
 
       </div>
 
-      {/* CHAOS ROUND */}
+      {/* SPECIAL MODES */}
 
-      <button
-        onClick={() =>
-          updateGame({
-            showChaosWheel: true,
-            chaosResult: "",
-          })
-        }
-        className="bg-purple-600 p-6 rounded-2xl text-3xl font-black"
-      >
-        START CHAOS ROUND
-      </button>
+      <div className="grid grid-cols-2 gap-5">
+
+        <button
+          onClick={() =>
+            updateGame({
+              showChaosWheel: true,
+              chaosResult: "",
+            })
+          }
+          className="bg-purple-600 p-6 rounded-2xl text-3xl font-black"
+        >
+          START CHAOS ROUND
+        </button>
+
+        <button
+          onClick={() =>
+            updateGame({
+              showChaosWheel: false,
+              chaosResult: "",
+            })
+          }
+          className="bg-purple-900 p-6 rounded-2xl text-3xl font-black"
+        >
+          HIDE CHAOS ROUND
+        </button>
+
+      </div>
+
+      {/* LEADERBOARD */}
+
+      <div className="grid grid-cols-2 gap-5">
+
+        <button
+          onClick={() =>
+            updateGame({
+              showLeaderboard: true,
+            })
+          }
+          className="bg-orange-500 p-6 rounded-2xl text-3xl font-black"
+        >
+          SHOW LEADERBOARD
+        </button>
+
+        <button
+          onClick={() =>
+            updateGame({
+              showLeaderboard: false,
+            })
+          }
+          className="bg-orange-900 p-6 rounded-2xl text-3xl font-black"
+        >
+          HIDE LEADERBOARD
+        </button>
+
+      </div>
+
+      {/* INTRO */}
+
+      <div className="grid grid-cols-2 gap-5">
+
+        <button
+          onClick={() =>
+            updateGame({
+              showIntro: true,
+            })
+          }
+          className="bg-cyan-500 p-6 rounded-2xl text-3xl font-black"
+        >
+          START INTRO
+        </button>
+
+        <button
+          onClick={() =>
+            updateGame({
+              showIntro: false,
+            })
+          }
+          className="bg-cyan-900 p-6 rounded-2xl text-3xl font-black"
+        >
+          END INTRO
+        </button>
+
+      </div>
 
       {/* WINNER */}
 
-      <div className="grid grid-cols-3 gap-5">
+      <div className="grid grid-cols-4 gap-5">
 
         <button
           onClick={() =>
@@ -244,7 +330,7 @@ export default function HostPage() {
               winner: "TEAM A",
             })
           }
-          className="bg-blue-700 p-6 rounded-2xl text-3xl font-black"
+          className="bg-blue-700 p-6 rounded-2xl text-2xl font-black"
         >
           TEAM A WINS
         </button>
@@ -255,7 +341,7 @@ export default function HostPage() {
               winner: "TEAM B",
             })
           }
-          className="bg-pink-700 p-6 rounded-2xl text-3xl font-black"
+          className="bg-pink-700 p-6 rounded-2xl text-2xl font-black"
         >
           TEAM B WINS
         </button>
@@ -266,12 +352,36 @@ export default function HostPage() {
               winner: "TEAM C",
             })
           }
-          className="bg-green-700 p-6 rounded-2xl text-3xl font-black"
+          className="bg-green-700 p-6 rounded-2xl text-2xl font-black"
         >
           TEAM C WINS
         </button>
 
+        <button
+          onClick={() =>
+            updateGame({
+              winner: "",
+            })
+          }
+          className="bg-gray-700 p-6 rounded-2xl text-2xl font-black"
+        >
+          HIDE WINNER
+        </button>
+
       </div>
+
+      {/* END GAME */}
+
+      <button
+        onClick={() =>
+          updateGame({
+            showEndGame: true,
+          })
+        }
+        className="bg-red-700 p-6 rounded-2xl text-4xl font-black"
+      >
+        END GAME
+      </button>
 
       {/* RESET */}
 
@@ -287,12 +397,15 @@ export default function HostPage() {
             showChaosWheel: false,
             chaosResult: "",
             winner: "",
+            showLeaderboard: false,
+            showIntro: false,
+            showEndGame: false,
             teamA: 0,
             teamB: 0,
             teamC: 0,
           })
         }
-        className="bg-white text-black p-6 rounded-2xl text-3xl font-black"
+        className="bg-white text-black p-6 rounded-2xl text-4xl font-black"
       >
         RESET GAME
       </button>
