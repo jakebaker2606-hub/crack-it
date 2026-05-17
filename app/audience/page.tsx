@@ -10,6 +10,17 @@ import {
   update,
 } from "firebase/database";
 
+const wheelOptions = [
+  "DOUBLE POINTS",
+  "LOSE 500",
+  "BONUS ROUND",
+  "STEAL POINTS",
+  "FREE 1000",
+  "MYSTERY",
+  "TRIPLE POINTS",
+  "SWAP SCORES",
+];
+
 export default function AudiencePage() {
 
   const [game, setGame] = useState<any>({
@@ -22,7 +33,14 @@ export default function AudiencePage() {
     timer: 30,
     timerRunning: false,
     showTimer: false,
+    showChaosWheel: false,
+    chaosResult: "",
+    winner: "",
   });
+
+  const [rotation, setRotation] = useState(0);
+
+  const [spinning, setSpinning] = useState(false);
 
   const timerAudio = useRef<HTMLAudioElement | null>(null);
 
@@ -62,11 +80,21 @@ export default function AudiencePage() {
 
       }
 
+      if (
+        data.showChaosWheel &&
+        !data.chaosResult &&
+        !spinning
+      ) {
+
+        spinWheel();
+
+      }
+
     });
 
     return () => unsubscribe();
 
-  }, []);
+  }, [spinning]);
 
   useEffect(() => {
 
@@ -94,6 +122,37 @@ export default function AudiencePage() {
     game.timer,
   ]);
 
+  const spinWheel = async () => {
+
+    setSpinning(true);
+
+    const randomIndex = Math.floor(
+      Math.random() * wheelOptions.length
+    );
+
+    const selected = wheelOptions[randomIndex];
+
+    const degreesPerOption =
+      360 / wheelOptions.length;
+
+    const finalRotation =
+      3600 +
+      (360 - randomIndex * degreesPerOption);
+
+    setRotation(finalRotation);
+
+    setTimeout(async () => {
+
+      await update(ref(db, "game"), {
+        chaosResult: selected,
+      });
+
+      setSpinning(false);
+
+    }, 5000);
+
+  };
+
   const formatScore = (score: number) => {
 
     if (score >= 1000000) {
@@ -110,7 +169,7 @@ export default function AudiencePage() {
 
   return (
 
-    <div className="min-h-screen bg-black text-white p-10">
+    <div className="min-h-screen bg-black text-white p-10 relative overflow-hidden">
 
       <h1 className="text-yellow-400 text-8xl font-black text-center">
         CRACK IT!
@@ -187,6 +246,72 @@ export default function AudiencePage() {
         </div>
 
       </div>
+
+      {/* CHAOS WHEEL */}
+
+      {game.showChaosWheel && (
+
+        <div className="fixed inset-0 bg-black/80 flex flex-col items-center justify-center z-50">
+
+          <div
+            style={{
+              transform: `rotate(${rotation}deg)`,
+              transition: "transform 5s ease-out",
+            }}
+            className="w-[500px] h-[500px] rounded-full border-[20px] border-white relative overflow-hidden"
+          >
+
+            {wheelOptions.map((option, index) => {
+
+              const angle =
+                (360 / wheelOptions.length) * index;
+
+              return (
+
+                <div
+                  key={option}
+                  style={{
+                    transform: `rotate(${angle}deg)`,
+                    transformOrigin: "bottom center",
+                  }}
+                  className="absolute w-1/2 h-1/2 left-1/2 top-1/2 bg-purple-600 border border-black flex items-center justify-center text-center text-xl font-black"
+                >
+                  {option}
+                </div>
+
+              );
+
+            })}
+
+          </div>
+
+          {game.chaosResult && (
+
+            <div className="bg-yellow-400 text-black text-6xl font-black px-12 py-6 rounded-3xl mt-10">
+              {game.chaosResult}
+            </div>
+
+          )}
+
+        </div>
+
+      )}
+
+      {/* WINNER */}
+
+      {game.winner && (
+
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50">
+
+          <div className="text-yellow-400 text-9xl font-black text-center">
+            {game.winner}
+            <br />
+            WINS!
+          </div>
+
+        </div>
+
+      )}
 
     </div>
 
