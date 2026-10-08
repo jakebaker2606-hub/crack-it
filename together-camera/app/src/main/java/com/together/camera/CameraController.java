@@ -36,7 +36,7 @@ public class CameraController {
     }
 
     private final Context context;
-    private final TextureView preview;
+    private final AspectTextureView preview;
     private final MjpegServer server;
     private final Callback callback;
     private final CameraManager manager;
@@ -68,7 +68,7 @@ public class CameraController {
     private boolean stabilizationSupported = false;
     private Size streamSize = new Size(1280, 720);
 
-    public CameraController(Context context, TextureView preview, MjpegServer server, Callback callback) {
+    public CameraController(Context context, AspectTextureView preview, MjpegServer server, Callback callback) {
         this.context = context;
         this.preview = preview;
         this.server = server;
