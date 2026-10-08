@@ -78,7 +78,7 @@ public class MainActivity extends Activity implements CameraController.Callback 
 
         preview.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
             @Override public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) { maybeStartCamera(); }
-            @Override public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {}
+            @Override public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) { if (camera != null) camera.refreshPreviewOrientation(); }
             @Override public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) { return true; }
             @Override public void onSurfaceTextureUpdated(SurfaceTexture surface) {}
         });
@@ -235,6 +235,13 @@ public class MainActivity extends Activity implements CameraController.Callback 
         });
         cameraButtons.addView(mirror, weighted());
         controls.addView(cameraButtons);
+
+        Button rotateImage = button("ROTATE IMAGE 90°");
+        rotateImage.setOnClickListener(v -> {
+            int degrees = camera == null ? 0 : camera.rotate90();
+            rotateImage.setText(degrees == 0 ? "ROTATE IMAGE 90°" : "ROTATE IMAGE 90° • " + degrees + "°");
+        });
+        controls.addView(rotateImage);
 
         controls.addView(label("Resolution"));
         Spinner resolution = spinner(new String[]{"720p Smooth • 1280×720", "1080p High • 1920×1080", "480p Low bandwidth • 854×480"});
