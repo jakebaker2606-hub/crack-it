@@ -61,7 +61,7 @@ public class CameraController {
     private boolean torch = false;
     private boolean stabilization = true;
     private boolean focusLocked = false;
-    private int manualRotation = 0;
+    private int manualRotation = 90; // Samsung A12 landscape correction: field-tested 90° clockwise
 
     private float maxZoom = 1f;
     private Range<Integer> exposureRange = new Range<>(0, 0);
