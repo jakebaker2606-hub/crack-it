@@ -3,6 +3,7 @@ package com.together.camera;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.TextureView;
+import android.view.View;
 
 public class AspectTextureView extends TextureView {
     private int ratioWidth = 0;
@@ -20,13 +21,35 @@ public class AspectTextureView extends TextureView {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        int width = MeasureSpec.getSize(widthMeasureSpec);
-        if (ratioWidth == 0 || ratioHeight == 0) {
-            setMeasuredDimension(width, MeasureSpec.getSize(heightMeasureSpec));
+        int widthMode = View.MeasureSpec.getMode(widthMeasureSpec);
+        int heightMode = View.MeasureSpec.getMode(heightMeasureSpec);
+        int width = View.MeasureSpec.getSize(widthMeasureSpec);
+        int height = View.MeasureSpec.getSize(heightMeasureSpec);
+
+        if (ratioWidth <= 0 || ratioHeight <= 0) {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
             return;
         }
-        int height = width * ratioHeight / ratioWidth;
-        setMeasuredDimension(width, height);
+
+        if (widthMode == View.MeasureSpec.EXACTLY && heightMode == View.MeasureSpec.EXACTLY) {
+            setMeasuredDimension(width, height);
+            return;
+        }
+
+        if (widthMode == View.MeasureSpec.EXACTLY) {
+            int wantedHeight = Math.round(width * (ratioHeight / (float) ratioWidth));
+            if (heightMode == View.MeasureSpec.AT_MOST) wantedHeight = Math.min(wantedHeight, height);
+            setMeasuredDimension(width, wantedHeight);
+            return;
+        }
+
+        if (heightMode == View.MeasureSpec.EXACTLY) {
+            int wantedWidth = Math.round(height * (ratioWidth / (float) ratioHeight));
+            if (widthMode == View.MeasureSpec.AT_MOST) wantedWidth = Math.min(wantedWidth, width);
+            setMeasuredDimension(wantedWidth, height);
+            return;
+        }
+
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 }

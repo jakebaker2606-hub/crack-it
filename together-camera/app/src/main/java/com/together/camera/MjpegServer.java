@@ -87,7 +87,7 @@ public class MjpegServer {
             } else if ("/info.json".equals(path)) {
                 String ip = NetworkUtil.localIpv4();
                 String json = String.format(Locale.US,
-                        "{\"app\":\"Together Camera\",\"version\":\"1.0.3\",\"width\":%d,\"height\":%d,\"fps\":%d,\"quality\":%d,\"port\":%d,\"stream\":\"http://%s:%d/video/mjpeg\"}",
+                        "{\"app\":\"Together Camera\",\"version\":\"1.0.4\",\"width\":%d,\"height\":%d,\"fps\":%d,\"quality\":%d,\"port\":%d,\"stream\":\"http://%s:%d/video/mjpeg\"}",
                         width, height, fps, quality, PORT, ip, PORT);
                 send(out, "200 OK", "application/json; charset=utf-8", json.getBytes(StandardCharsets.UTF_8));
             } else {

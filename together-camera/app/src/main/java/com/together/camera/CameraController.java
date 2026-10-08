@@ -3,6 +3,7 @@ package com.together.camera;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.ImageFormat;
+import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
@@ -61,7 +62,7 @@ public class CameraController {
     private boolean torch = false;
     private boolean stabilization = true;
     private boolean focusLocked = false;
-    private int manualRotation = 90; // Samsung A12 landscape correction: field-tested 90° clockwise
+    private int manualRotation = 0; // automatic portrait/landscape is now the default
 
     private float maxZoom = 1f;
     private Range<Integer> exposureRange = new Range<>(0, 0);
@@ -262,8 +263,9 @@ public class CameraController {
                     session = s;
                     try {
                         session.setRepeatingRequest(request.build(), null, handler);
-                        server.setStreamInfo(streamSize.getWidth(), streamSize.getHeight(), wantedFps, jpegQuality);
-                        callback.onStreamInfo(streamSize.getWidth(), streamSize.getHeight(), wantedFps, jpegQuality);
+                        int[] oriented = orientedOutputSize();
+                        server.setStreamInfo(oriented[0], oriented[1], wantedFps, jpegQuality);
+                        callback.onStreamInfo(oriented[0], oriented[1], wantedFps, jpegQuality);
                         callback.onStatus("Camera ready • local stream running");
                     } catch (CameraAccessException e) {
                         callback.onStatus("Could not start camera stream");
@@ -285,8 +287,9 @@ public class CameraController {
             try {
                 applyControls(request);
                 session.setRepeatingRequest(request.build(), null, handler);
-                server.setStreamInfo(streamSize.getWidth(), streamSize.getHeight(), wantedFps, jpegQuality);
-                callback.onStreamInfo(streamSize.getWidth(), streamSize.getHeight(), wantedFps, jpegQuality);
+                int[] oriented = orientedOutputSize();
+                server.setStreamInfo(oriented[0], oriented[1], wantedFps, jpegQuality);
+                callback.onStreamInfo(oriented[0], oriented[1], wantedFps, jpegQuality);
             } catch (Exception ignored) {}
         });
     }
@@ -369,10 +372,39 @@ public class CameraController {
         return (base + manualRotation) % 360;
     }
 
+    private int[] orientedOutputSize() {
+        int degrees = jpegOrientation();
+        if (degrees == 90 || degrees == 270) {
+            return new int[]{streamSize.getHeight(), streamSize.getWidth()};
+        }
+        return new int[]{streamSize.getWidth(), streamSize.getHeight()};
+    }
+
     private void applyPreviewOrientation() {
         preview.post(() -> {
+            int viewWidth = preview.getWidth();
+            int viewHeight = preview.getHeight();
+            if (viewWidth <= 0 || viewHeight <= 0 || streamSize == null) return;
+
             int degrees = previewOrientationDegrees();
-            preview.setRotation(degrees);
+            int bufferWidth = streamSize.getWidth();
+            int bufferHeight = streamSize.getHeight();
+            int rotatedWidth = (degrees == 90 || degrees == 270) ? bufferHeight : bufferWidth;
+            int rotatedHeight = (degrees == 90 || degrees == 270) ? bufferWidth : bufferHeight;
+
+            float uniform = Math.max(
+                    viewWidth / (float) Math.max(1, rotatedWidth),
+                    viewHeight / (float) Math.max(1, rotatedHeight));
+            float scaleX = uniform * bufferWidth / Math.max(1f, viewWidth);
+            float scaleY = uniform * bufferHeight / Math.max(1f, viewHeight);
+            float centerX = viewWidth / 2f;
+            float centerY = viewHeight / 2f;
+
+            Matrix matrix = new Matrix();
+            matrix.postScale(scaleX, scaleY, centerX, centerY);
+            matrix.postRotate(degrees, centerX, centerY);
+            preview.setRotation(0f);
+            preview.setTransform(matrix);
         });
     }
 

@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CaptureRequest;
@@ -45,6 +46,9 @@ public class MainActivity extends Activity implements CameraController.Callback 
     private Switch stabSwitch;
     private SeekBar zoomBar;
     private SeekBar exposureBar;
+    private LinearLayout rootLayout;
+    private LinearLayout cameraPane;
+    private ScrollView controlScroller;
 
     private MjpegServer mjpegServer;
     private CameraController camera;
@@ -90,6 +94,15 @@ public class MainActivity extends Activity implements CameraController.Callback 
             maybeStartCamera();
         }
         updateNetworkText();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        applyUiOrientation(newConfig.orientation);
+        if (camera != null && preview != null) {
+            preview.postDelayed(() -> camera.refreshPreviewOrientation(), 120);
+        }
     }
 
     @Override
@@ -177,42 +190,52 @@ public class MainActivity extends Activity implements CameraController.Callback 
     }
 
     private void buildUi() {
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.HORIZONTAL);
-        root.setBackgroundColor(bg);
-        root.setPadding(dp(12), dp(10), dp(12), dp(10));
+        boolean portrait = getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
 
-        LinearLayout left = new LinearLayout(this);
-        left.setOrientation(LinearLayout.VERTICAL);
-        left.setPadding(0, 0, dp(10), 0);
-        root.addView(left, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.55f));
+        rootLayout = new LinearLayout(this);
+        rootLayout.setOrientation(portrait ? LinearLayout.VERTICAL : LinearLayout.HORIZONTAL);
+        rootLayout.setBackgroundColor(bg);
+        rootLayout.setPadding(dp(12), dp(10), dp(12), dp(10));
+
+        cameraPane = new LinearLayout(this);
+        cameraPane.setOrientation(LinearLayout.VERTICAL);
+        cameraPane.setPadding(0, 0, portrait ? 0 : dp(10), portrait ? dp(8) : 0);
+        if (portrait) {
+            rootLayout.addView(cameraPane, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1.15f));
+        } else {
+            rootLayout.addView(cameraPane, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.55f));
+        }
 
         TextView title = textView("TOGETHER CAMERA", 20, true, text);
-        left.addView(title);
+        cameraPane.addView(title);
         TextView sub = textView("Offline local camera • no cloud • no mobile data • no certificate", 12, false, muted);
-        left.addView(sub);
+        cameraPane.addView(sub);
 
         preview = new AspectTextureView(this);
         LinearLayout.LayoutParams previewLp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f);
         previewLp.topMargin = dp(8);
-        left.addView(preview, previewLp);
+        cameraPane.addView(preview, previewLp);
 
         status = textView("Starting…", 13, true, text);
         status.setPadding(dp(10), dp(9), dp(10), dp(9));
         status.setBackgroundColor(panel);
-        left.addView(status, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        cameraPane.addView(status, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
 
         network = textView("Local stream: checking Wi-Fi…", 12, false, muted);
         network.setPadding(0, dp(7), 0, 0);
-        left.addView(network);
+        cameraPane.addView(network);
 
-        ScrollView scroller = new ScrollView(this);
+        controlScroller = new ScrollView(this);
         LinearLayout controls = new LinearLayout(this);
         controls.setOrientation(LinearLayout.VERTICAL);
         controls.setPadding(dp(10), dp(8), dp(10), dp(12));
         controls.setBackgroundColor(panel);
-        scroller.addView(controls);
-        root.addView(scroller, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f));
+        controlScroller.addView(controls);
+        if (portrait) {
+            rootLayout.addView(controlScroller, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 0.85f));
+        } else {
+            rootLayout.addView(controlScroller, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f));
+        }
 
         controls.addView(sectionTitle("PAIR WITH TOGETHER"));
         pairStatus = textView("Scan the camera QR in Together", 12, true, muted);
@@ -342,7 +365,27 @@ public class MainActivity extends Activity implements CameraController.Callback 
         note.setPadding(0, dp(10), 0, 0);
         controls.addView(note);
 
-        setContentView(root);
+        setContentView(rootLayout);
+    }
+
+    private void applyUiOrientation(int orientation) {
+        if (rootLayout == null || cameraPane == null || controlScroller == null) return;
+        boolean portrait = orientation == Configuration.ORIENTATION_PORTRAIT;
+        rootLayout.setOrientation(portrait ? LinearLayout.VERTICAL : LinearLayout.HORIZONTAL);
+        cameraPane.setPadding(0, 0, portrait ? 0 : dp(10), portrait ? dp(8) : 0);
+
+        if (portrait) {
+            cameraPane.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, 0, 1.15f));
+            controlScroller.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, 0, 0.85f));
+        } else {
+            cameraPane.setLayoutParams(new LinearLayout.LayoutParams(
+                    0, LinearLayout.LayoutParams.MATCH_PARENT, 1.55f));
+            controlScroller.setLayoutParams(new LinearLayout.LayoutParams(
+                    0, LinearLayout.LayoutParams.MATCH_PARENT, 1f));
+        }
+        rootLayout.requestLayout();
     }
 
     private void updateNetworkText() {
