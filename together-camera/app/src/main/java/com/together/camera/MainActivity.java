@@ -193,7 +193,6 @@ public class MainActivity extends Activity implements CameraController.Callback 
         left.addView(sub);
 
         preview = new AspectTextureView(this);
-        preview.setBackgroundColor(Color.BLACK);
         LinearLayout.LayoutParams previewLp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f);
         previewLp.topMargin = dp(8);
         left.addView(preview, previewLp);
