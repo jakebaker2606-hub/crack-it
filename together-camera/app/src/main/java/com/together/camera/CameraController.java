@@ -61,6 +61,7 @@ public class CameraController {
     private boolean torch = false;
     private boolean stabilization = true;
     private boolean focusLocked = false;
+    private int manualRotation = 0;
 
     private float maxZoom = 1f;
     private Range<Integer> exposureRange = new Range<>(0, 0);
@@ -155,6 +156,18 @@ public class CameraController {
         }
     }
 
+    public int rotate90() {
+        manualRotation = (manualRotation + 90) % 360;
+        applyPreviewOrientation();
+        updateRepeating();
+        return manualRotation;
+    }
+
+    public void refreshPreviewOrientation() {
+        applyPreviewOrientation();
+        updateRepeating();
+    }
+
     public void switchCamera() {
         lensFacing = lensFacing == CameraCharacteristics.LENS_FACING_BACK
                 ? CameraCharacteristics.LENS_FACING_FRONT
@@ -190,6 +203,7 @@ public class CameraController {
             readCapabilities();
             streamSize = chooseJpegSize(characteristics, wantedWidth, wantedHeight);
             preview.setAspectRatio(streamSize.getWidth(), streamSize.getHeight());
+            applyPreviewOrientation();
             reader = ImageReader.newInstance(streamSize.getWidth(), streamSize.getHeight(), ImageFormat.JPEG, 3);
             reader.setOnImageAvailableListener(this::onImage, handler);
             callback.onStatus("Opening camera…");
@@ -321,27 +335,61 @@ public class CameraController {
         }
     }
 
-    private int jpegOrientation() {
-        if (characteristics == null) return 0;
-        Integer sensor = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
-        Integer facing = characteristics.get(CameraCharacteristics.LENS_FACING);
-        int sensorOrientation = sensor == null ? 0 : sensor;
+    private int displayRotationDegrees() {
         int rotation = Surface.ROTATION_0;
         try {
             Display d = preview.getDisplay();
             if (d != null) rotation = d.getRotation();
         } catch (Exception ignored) {}
-        int deviceOrientation;
         switch (rotation) {
-            case Surface.ROTATION_90: deviceOrientation = 0; break;
-            case Surface.ROTATION_180: deviceOrientation = 270; break;
-            case Surface.ROTATION_270: deviceOrientation = 180; break;
-            default: deviceOrientation = 90;
+            case Surface.ROTATION_90: return 90;
+            case Surface.ROTATION_180: return 180;
+            case Surface.ROTATION_270: return 270;
+            default: return 0;
         }
+    }
+
+    private int sensorOrientationDegrees() {
+        if (characteristics == null) return 0;
+        Integer sensor = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
+        return sensor == null ? 0 : sensor;
+    }
+
+    private int previewOrientationDegrees() {
+        if (characteristics == null) return manualRotation;
+        Integer facing = characteristics.get(CameraCharacteristics.LENS_FACING);
+        int sensor = sensorOrientationDegrees();
+        int display = displayRotationDegrees();
+        int base;
         if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
-            return (sensorOrientation - deviceOrientation + 360) % 360;
+            base = (sensor + display) % 360;
+        } else {
+            base = (sensor - display + 360) % 360;
         }
-        return (deviceOrientation + sensorOrientation + 270) % 360;
+        return (base + manualRotation) % 360;
+    }
+
+    private void applyPreviewOrientation() {
+        preview.post(() -> {
+            int degrees = previewOrientationDegrees();
+            preview.setRotation(degrees);
+        });
+    }
+
+    private int jpegOrientation() {
+        if (characteristics == null) return manualRotation;
+        Integer facing = characteristics.get(CameraCharacteristics.LENS_FACING);
+        int sensor = sensorOrientationDegrees();
+        int display = displayRotationDegrees();
+
+        // Camera2 JPEG orientation expressed as clockwise rotation needed for an upright image.
+        int base;
+        if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
+            base = (sensor + display) % 360;
+        } else {
+            base = (sensor - display + 360) % 360;
+        }
+        return (base + manualRotation) % 360;
     }
 
     private String findCameraId(int facing) throws CameraAccessException {
