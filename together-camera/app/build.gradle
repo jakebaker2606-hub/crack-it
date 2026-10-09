@@ -7,16 +7,32 @@ android {
     compileSdk 35
 
     defaultConfig {
-        applicationId 'com.together.camera'
-        minSdk 26
+        applicationId 'com.together.camera.hq'
+        minSdk 24
         targetSdk 35
-        versionCode 10
-        versionName '1.1.0'
+        versionCode 11
+        versionName '1.1.1'
+    }
+
+    signingConfigs {
+        debug {
+            enableV1Signing true
+            enableV2Signing true
+        }
     }
 
     buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
         release {
             minifyEnabled false
+        }
+    }
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging true
         }
     }
 
