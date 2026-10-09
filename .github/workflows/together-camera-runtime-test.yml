@@ -31,12 +31,12 @@ jobs:
           disable-animations: true
           script: |
             adb install -r together-camera/app/build/outputs/apk/debug/app-debug.apk
-            adb shell pm grant com.together.camera android.permission.CAMERA || true
+            adb shell pm grant com.together.camera.hq android.permission.CAMERA || true
             adb shell am force-stop com.together.camera
             adb logcat -c
-            adb shell am start -n com.together.camera/.MainActivity
+            adb shell am start -n com.together.camera.hq/com.together.camera.MainActivity
             sleep 10
             echo "=== ACTIVITY ==="
-            adb shell dumpsys activity activities | grep -A 8 com.together.camera || true
+            adb shell dumpsys activity activities | grep -A 8 com.together.camera.hq || true
             echo "=== CRASH LOG ==="
-            adb logcat -d -v brief | grep -E "FATAL EXCEPTION|AndroidRuntime|com.together.camera|Process: com.together.camera" | tail -n 300
+            adb logcat -d -v brief | grep -E "FATAL EXCEPTION|AndroidRuntime|com.together.camera|Process: com.together.camera.hq" | tail -n 300
