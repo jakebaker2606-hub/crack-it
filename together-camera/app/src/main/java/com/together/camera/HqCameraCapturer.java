@@ -2,6 +2,7 @@ package com.together.camera;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
@@ -22,6 +23,7 @@ import android.view.WindowManager;
 
 import org.webrtc.CapturerObserver;
 import org.webrtc.SurfaceTextureHelper;
+import org.webrtc.TextureBufferImpl;
 import org.webrtc.VideoCapturer;
 import org.webrtc.VideoFrame;
 
@@ -100,13 +102,39 @@ public class HqCameraCapturer implements VideoCapturer {
             }
             if (!deliver) return;
 
-            VideoFrame.Buffer buffer = frame.getBuffer();
-            buffer.retain();
-            VideoFrame rotated = new VideoFrame(buffer, currentFrameRotation(), frame.getTimestampNs());
-            try {
-                obs.onFrameCaptured(rotated);
-            } finally {
-                rotated.release();
+            // Match WebRTC Camera2Session exactly, as used by Together Camera HQ v1.1.1:
+            // undo the camera sensor orientation in the texture matrix and report device
+            // orientation separately in VideoFrame rotation metadata. Without this, the
+            // sensor rotation is effectively applied twice on Samsung devices.
+            VideoFrame.Buffer incoming = frame.getBuffer();
+            if (incoming instanceof TextureBufferImpl) {
+                TextureBufferImpl texture = (TextureBufferImpl) incoming;
+                Matrix transformMatrix = new Matrix();
+                transformMatrix.preTranslate(0.5f, 0.5f);
+                if (frontFacing) {
+                    transformMatrix.preScale(-1f, 1f);
+                }
+                transformMatrix.preRotate(-sensorOrientation);
+                transformMatrix.preTranslate(-0.5f, -0.5f);
+
+                VideoFrame.TextureBuffer correctedBuffer =
+                        texture.applyTransformMatrix(transformMatrix, texture.getWidth(), texture.getHeight());
+                VideoFrame corrected = new VideoFrame(
+                        correctedBuffer, currentFrameRotation(), frame.getTimestampNs());
+                try {
+                    obs.onFrameCaptured(corrected);
+                } finally {
+                    corrected.release();
+                }
+            } else {
+                incoming.retain();
+                VideoFrame corrected = new VideoFrame(
+                        incoming, currentFrameRotation(), frame.getTimestampNs());
+                try {
+                    obs.onFrameCaptured(corrected);
+                } finally {
+                    corrected.release();
+                }
             }
         });
     }
