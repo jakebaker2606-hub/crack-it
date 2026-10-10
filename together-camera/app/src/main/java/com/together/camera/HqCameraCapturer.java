@@ -71,6 +71,8 @@ public class HqCameraCapturer implements VideoCapturer {
     private int sensorOrientation = 0;
     private int maxAfRegions = 0;
     private int maxAeRegions = 0;
+    private int continuousAfMode = CaptureRequest.CONTROL_AF_MODE_OFF;
+    private boolean autoAfSupported = false;
     private boolean stabilizationSupported = false;
     private int generation = 0;
 
@@ -208,6 +210,10 @@ public class HqCameraCapturer implements VideoCapturer {
         }
         post(() -> {
             if (requestBuilder == null || captureSession == null) return;
+            if (!autoAfSupported) {
+                status("This camera has fixed focus");
+                return;
+            }
             try {
                 if (locked) {
                     requestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_AUTO);
@@ -240,6 +246,10 @@ public class HqCameraCapturer implements VideoCapturer {
 
     private void focusAtInternal(float nx, float ny) {
         if (requestBuilder == null || captureSession == null || characteristics == null) return;
+        if (!autoAfSupported) {
+            status("This camera has fixed focus");
+            return;
+        }
         try {
             Rect sensor = activeArray;
             if (sensor != null && (maxAfRegions > 0 || maxAeRegions > 0)) {
@@ -275,7 +285,7 @@ public class HqCameraCapturer implements VideoCapturer {
                         requestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CaptureRequest.CONTROL_AF_TRIGGER_CANCEL);
                         captureSession.capture(requestBuilder.build(), null, cameraHandler);
                         requestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CaptureRequest.CONTROL_AF_TRIGGER_IDLE);
-                        requestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO);
+                        requestBuilder.set(CaptureRequest.CONTROL_AF_MODE, continuousAfMode);
                         captureSession.setRepeatingRequest(requestBuilder.build(), null, cameraHandler);
                     } catch (Exception ignored) {}
                 }, 1700);
@@ -358,6 +368,24 @@ public class HqCameraCapturer implements VideoCapturer {
             activeArray = characteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
             Float availableZoom = characteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM);
             maxZoom = availableZoom == null ? 1f : Math.max(1f, Math.min(10f, availableZoom));
+
+            int[] afModes = characteristics.get(CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES);
+            continuousAfMode = CaptureRequest.CONTROL_AF_MODE_OFF;
+            autoAfSupported = false;
+            if (afModes != null) {
+                for (int mode : afModes) {
+                    if (mode == CaptureRequest.CONTROL_AF_MODE_AUTO) autoAfSupported = true;
+                    if (mode == CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO) {
+                        continuousAfMode = CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO;
+                    } else if (continuousAfMode == CaptureRequest.CONTROL_AF_MODE_OFF &&
+                            mode == CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE) {
+                        continuousAfMode = CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE;
+                    } else if (continuousAfMode == CaptureRequest.CONTROL_AF_MODE_OFF &&
+                            mode == CaptureRequest.CONTROL_AF_MODE_AUTO) {
+                        continuousAfMode = CaptureRequest.CONTROL_AF_MODE_AUTO;
+                    }
+                }
+            }
 
             Integer afRegions = characteristics.get(CameraCharacteristics.CONTROL_MAX_REGIONS_AF);
             Integer aeRegions = characteristics.get(CameraCharacteristics.CONTROL_MAX_REGIONS_AE);
@@ -477,7 +505,7 @@ public class HqCameraCapturer implements VideoCapturer {
         requestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON);
         requestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_AUTO);
         requestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
-                focusLocked ? CaptureRequest.CONTROL_AF_MODE_AUTO : CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO);
+                focusLocked && autoAfSupported ? CaptureRequest.CONTROL_AF_MODE_AUTO : continuousAfMode);
 
         Range<Integer> fpsRange = chooseFpsRange(characteristics, requestedFps);
         if (fpsRange != null) requestBuilder.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, fpsRange);
@@ -598,7 +626,7 @@ public class HqCameraCapturer implements VideoCapturer {
         if (listener == null) return;
         float z;
         synchronized (lock) { z = maxZoom; }
-        listener.onCameraCapabilities(z, maxAfRegions > 0, stabilizationSupported);
+        listener.onCameraCapabilities(z, autoAfSupported, stabilizationSupported);
         listener.onCameraFacingChanged(frontFacing);
         notifyZoom();
     }
