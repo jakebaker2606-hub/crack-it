@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -500,7 +501,12 @@ public class MainActivity extends Activity {
             }
         };
 
-        try { connectivityManager.registerDefaultNetworkCallback(networkCallback); } catch (Exception ignored) {}
+        try {
+            NetworkRequest wifiRequest = new NetworkRequest.Builder()
+                    .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+                    .build();
+            connectivityManager.registerNetworkCallback(wifiRequest, networkCallback);
+        } catch (Exception ignored) {}
     }
 
     private void bindBestWifi() {
