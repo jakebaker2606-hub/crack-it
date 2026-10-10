@@ -424,7 +424,7 @@ public class MainActivity extends Activity {
 
     private void processIntent(Intent intent) {
         Uri u = intent == null ? null : intent.getData();
-        if (u != null && "togethercamerahq".equalsIgnoreCase(u.getScheme()) && "pair".equalsIgnoreCase(u.getHost())) {
+        if (u != null && "togethercamerahq121".equalsIgnoreCase(u.getScheme()) && "pair".equalsIgnoreCase(u.getHost())) {
             String host = u.getQueryParameter("host");
             String token = u.getQueryParameter("token");
             String port = u.getQueryParameter("port");
