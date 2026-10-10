@@ -9,7 +9,7 @@
     <application
         android:allowBackup="false"
         android:extractNativeLibs="true"
-        android:label="Together Camera HQ 1.2"
+        android:label="Together Camera HQ 1.2.1"
         android:usesCleartextTraffic="true"
         android:theme="@android:style/Theme.Material.NoActionBar">
         <activity
@@ -25,7 +25,7 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="togethercamerahq" android:host="pair" />
+                <data android:scheme="togethercamerahq121" android:host="pair" />
             </intent-filter>
         </activity>
     </application>
