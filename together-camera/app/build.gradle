@@ -7,11 +7,11 @@ android {
     compileSdk 35
 
     defaultConfig {
-        applicationId 'com.together.camera.hq.v120'
+        applicationId 'com.together.camera.hq.v121'
         minSdk 24
         targetSdk 35
-        versionCode 20
-        versionName '1.2.0'
+        versionCode 21
+        versionName '1.2.1'
     }
 
     signingConfigs {
